@@ -35,6 +35,7 @@ in {
     alacritty
     alacritty-theme
     brave
+    vscode
   ];
 
   programs.bash = {
