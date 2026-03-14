@@ -1,0 +1,30 @@
+[general]
+import = [
+    "~/.config/alacritty/themes/merine_dark.toml"
+]
+
+[terminal.shell]
+program = "zellij"
+
+[window]
+dimensions = { columns = 120, lines = 40 }
+position = { x = 450, y = 200 }
+opacity = 0.75
+
+[font]
+normal = { family = "Cica" }
+size = 14.0
+
+[cursor]
+style = { shape = "Beam" }
+
+[[mouse.bindings]]
+mouse = "Middle"
+action = "Paste"
+
+[[mouse.bindings]]
+mouse = "Right"
+action = "Copy"
+
+[terminal]
+
