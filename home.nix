@@ -32,6 +32,9 @@ in {
     docker-compose
     ripgrep
     github-copilot-cli
+    alacritty
+    alacritty-theme
+    brave
   ];
 
   programs.bash = {
