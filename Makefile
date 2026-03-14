@@ -6,6 +6,9 @@ help: ## ヘルプを表示
 install: ## 新しい環境でNixをインストール
 	curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
 
+setup-homemanager: ## home-managerをいんすとーるしてきりかおこなう
+  nix run github:nix-community/home-manager -- init --switch
+
 apply: ## 現在の設定を適用
 	home-manager switch --flake .\#default --impure
 
