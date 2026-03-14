@@ -1,0 +1,5 @@
+# fish
+config/fish/fish_variables
+
+# Zellij
+config/zellij/*.bak

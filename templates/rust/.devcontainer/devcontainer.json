@@ -1,0 +1,37 @@
+{
+  "name": "Nix (Debian Slim)",
+  "image": "mcr.microsoft.com/devcontainers/base:debian", // 実体は debian:slim ベース
+
+  "features": {
+    // Nixのインストール
+    "ghcr.io/devcontainers/features/nix:1": {
+      "version": "latest",
+      "multiUser": true
+    },
+    // Slimイメージで削られがちな共通ツールを補完
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "configureZshOhMyZsh": true,
+      "upgradePackages": false
+    }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "mkhl.direnv",
+        "jnoortheen.nix-ide"
+      ],
+      "settings": {
+        "nix.enableLanguageServer": true,
+        "nix.serverPath": "nil",
+        "nix.formatterPath": "nixpkgs-fmt"
+      }
+    }
+  },
+
+  // 起動時に環境を準備
+  "postCreateCommand": "nix develop --command true",
+
+  "remoteUser": "vscode"
+}

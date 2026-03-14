@@ -1,0 +1,8 @@
+version: "2.2"
+services:
+  plantuml-server:
+    image: plantuml/plantuml-server
+    container_name: plantuml-local-server
+    restart: always
+    ports:
+      - "49153:8080"

@@ -1,0 +1,11 @@
+services:
+  silverbullet:
+    image: zefhemel/silverbullet
+    restart: unless-stopped
+    ports:
+      - "3030:3030"
+    volumes:
+      - ./space:/space
+    environment:
+      # ブラウザからアクセスする際のポートを指定
+      - SB_PORT=3030

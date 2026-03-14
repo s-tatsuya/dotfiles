@@ -1,0 +1,124 @@
+// 既定値を上書きするには、このファイル内にキー バインドを挿入します
+// Place your key bindings in this file to overwrite the defaults
+[
+
+    // =======================
+    // ### ファーカス：追加
+    // =======================
+    {
+        "key": "ctrl+shift+oem_3",
+        "command": "runCommands",
+        "args": {
+            "commands": [
+                "workbench.action.toggleMaximizedPanel",
+                "workbench.action.terminal.focus"
+            ]
+        },
+        "when": "!terminalFocus"
+    },
+    {
+        "key": "ctrl+shift+oem_3",
+        "command": "runCommands",
+        "args": {
+            "commands": [
+                "workbench.action.toggleMaximizedPanel",
+                "workbench.action.focusFirstEditorGroup"
+            ]
+        },
+        "when": "terminalFocus && panelMaximized"
+    },
+    {
+        "key": "ctrl+shift+oem_3",
+        "command": "workbench.action.toggleMaximizedPanel",
+        "when": "terminalFocus && !panelMaximized"
+    },
+    {
+        "key": "ctrl+oem_3",
+        "command": "workbench.action.terminal.focus",
+        "when": "!terminalFocus"
+    },
+    {
+        "key": "ctrl+oem_3",
+        "command": "workbench.action.focusFirstEditorGroup",
+        "when": "terminalFocus"
+    },
+    // =======================
+    // ### ファーカス：削除
+    // =======================
+    {
+        "key": "ctrl+oem_3",
+        "command": "-workbench.action.terminal.toggleTerminal",
+        "when": "terminal.active"
+    },
+    // =======================
+    // ### ターミナル：追加
+    // =======================
+    // ctrl + shift + f
+    {
+        // ターミナルにフォーカスが有る：
+        // ターミナル内の検索のショートカットの変更
+        "key": "ctrl+shift+f",
+        "command": "workbench.action.terminal.focusFind",
+        "when": "terminalFindFocused && terminalHasBeenCreated || terminalFindFocused && terminalProcessSupported || terminalFocusInAny && terminalHasBeenCreated || terminalFocusInAny && terminalProcessSupported"
+    },
+    // =======================
+    // ### ターミナル：削除
+    // =======================
+    {
+        // ターミナルでctrl + f でもカーソル移動ができるようにするため、検索のショートカットを入れ替え
+        "key": "ctrl+f",
+        "command": "-workbench.action.terminal.focusFind",
+        "when": "terminalFindFocused && terminalHasBeenCreated || terminalFindFocused && terminalProcessSupported || terminalFocusInAny && terminalHasBeenCreated || terminalFocusInAny && terminalProcessSupported"
+    },
+    {
+        // ターミナルでctrl + f でもカーソル移動ができるようにするため、検索のショートカットを入れ替え
+        "key": "ctrl+shift+f",
+        "command": "-workbench.action.terminal.searchWorkspace",
+        "when": "terminalFocus && terminalProcessSupported && terminalTextSelected"
+    },
+    // =======================
+    // ### Python：削除
+    // =======================
+    {
+        // Pythonコードの実行を誤操作で実施してしまうことがあるため、ショートカットを無効化
+        "key": "shift+enter",
+        "command": "-python.execInREPL",
+        "when": "config.python.REPL.sendToNativeREPL && editorTextFocus && !isCompositeNotebook && !jupyter.ownsSelection && !notebookEditorFocused && editorLangId == 'python'"
+    },
+    {
+        // Pythonコードの実行を誤操作で実施してしまうことがあるため、ショートカットを無効化
+        "key": "shift+enter",
+        "command": "-python.execSelectionInTerminal",
+        "when": "editorTextFocus && !findInputFocussed && !isCompositeNotebook && !jupyter.ownsSelection && !notebookEditorFocused && !replaceInputFocussed && editorLangId == 'python'"
+    },
+    // =======================
+    // ### Markdown：削除
+    // =======================
+    {
+        "key": "ctrl+b",
+        // Markdownファイルでの太字の切り替えを無効化
+        // サイドバーのショートカットが常に使えるようにするため
+        "command": "-markdown.extension.editing.toggleBold",
+        "when": "editorTextFocus && !editorReadonly && editorLangId =~ /^markdown$|^rmd$|^quarto$/"
+    },
+    {
+        "key": "ctrl+shift+enter",
+        // カーソルの上に改行を挿入するショートカットを有効化するため、無効化
+        "command": "-markdown-preview-enhanced.runAllCodeChunks",
+        "when": "editorLangId == 'markdown'"
+    },
+    {
+        "key": "shift+enter",
+        // コードの実行を誤操作で実施してしまうことがあるため、ショートカットを無効か
+        "command": "-markdown-preview-enhanced.runCodeChunk",
+        "when": "editorLangId == 'markdown'"
+    },
+    // =======================
+    // ### 全般：削除
+    // =======================
+    {
+        // Redoは Shift + Ctrl + zで実行できる
+        "key": "ctrl+y",
+        "command": "-redo"
+    },
+]
