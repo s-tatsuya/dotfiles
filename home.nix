@@ -12,7 +12,6 @@ in {
   programs.home-manager.enable = true;
 
   home.file = {
-    ".config/nvim".source = ./config/nvim;
 
     # fishはまずは、ディレクトリごとではなく、必要なファイル・フォルダだけを個別に指定
     ".config/fish/config.fish".source = ./config/fish/config.fish;
@@ -22,6 +21,8 @@ in {
     ".config/fish/fish_plugins".source = ./config/fish/fish_plugins;
 
     ".config/zellij/config.kdl".source = ./config/zellij/config.kdl;
+    ".config/nvim".source = ./config/nvim;
+    ".config/alacritty".source = ./config/alacritty;
   };
 
   home.packages = with pkgs; [
