@@ -17,6 +17,7 @@
         # 特定のパッケージ名だけを許可する設定
         config.allowUnfreePredicate = pkg: builtins.elem (nixpkgs.lib.getName pkg) [
           "github-copilot-cli"
+          "vscode"
         ];
       };
     in {
