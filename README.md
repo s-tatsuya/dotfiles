@@ -58,3 +58,7 @@ make apply
 
 - **Git Add:** Nix Flakes は Git 管理下のファイルのみを認識します。新しい設定ファイルを追加した後は、必ず \`git add\` を実行してから \`make apply\` してください。
 - **SSH Keys:** セキュリティ上の理由から SSH 鍵はリポジトリに含めていません。新しい環境では別途 \`ssh-keygen\` を行い、GitHub 等へ登録してください。
+
+## 参考資料
+
+- [GitHub: DevContainerサンプル](https://github.com/search?q=org%3Amicrosoft+vscode-remote-try-&type=Repositories)
