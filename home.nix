@@ -27,6 +27,7 @@ in {
 
   home.packages = with pkgs; [
     fish
+    neovim
     zellij
     docker
     docker-compose
