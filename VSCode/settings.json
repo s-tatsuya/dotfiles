@@ -1,803 +1,818 @@
 {
-    //----------------------------------------------------------
-    // 基本設定
-    //----------------------------------------------------------
-    "extensions.ignoreRecommendations": true,
-    "remote.autoForwardPortsSource": "hybrid",
-    "security.workspace.trust.untrustedFiles": "open",
-    "window.restoreWindows": "none",
-    "window.openFoldersInNewWindow": "off",
-    "workbench.editor.enablePreview": true,
-    "workbench.startupEditor": "none",
-    "workbench.editor.editorActionsLocation": "hidden",
-    // Git
-    "git.openRepositoryInParentFolders": "never",
-    // Diff
-    "diffEditor.ignoreTrimWhitespace": true,
-    //----------------------------------------------------------
-    // UI
-    //----------------------------------------------------------
-    "editor.tabSize": 4,
-    "editor.detectIndentation": false,
-    "editor.fontSize": 16,
-    "editor.fontFamily": "Cica",
-    // "editor.fontFamily": "FirgeNerd Console",
-    "editor.fontLigatures": true,
-    "editor.wordWrap": "off",
-    "editor.minimap.enabled": false,
-    "editor.lineNumbers": "on",
-    "editor.renderLineHighlight": "all",
-    "editor.showFoldingControls": "always",
-    "editor.suggest.preview": false,
-    "editor.parameterHints.enabled": false,
-    "editor.stickyScroll.enabled": true,
-    "editor.guides.bracketPairs": true,
-    "editor.tokenColorCustomizations": {
-        "textMateRules": [
-            {
-                "scope": [
-                    "variable"
-                ],
-                "settings": {
-                    "fontStyle": "italic"
-                }
-            },
-            {
-                "scope": "meta.embedded.block.json",
-                "settings": {
-                    "foreground": "#000000" // JSONブロックの文字列の色を赤に変更
-                }
-            }
-        ],
-        "[Noctis Sereno]": {
-            "textMateRules": [
-                {
-                    "scope": [
-                        "invalid.illegal.expected-dictionary-separator.json",
-                        "invalid.illegal.expected-array-separator.json"
-                    ],
-                    "settings": {
-                        "foreground": "#B16A4E" // Markdown内のJSONブロックの文字列の色を赤に変更
-                    }
-                }
-            ]
-        }
-    },
-    "workbench.colorCustomizations": {},
-    "workbench.editor.wrapTabs": true,
-    "workbench.editor.tabSizing": "shrink",
-    "workbench.navigationControl.enabled": false,
-    "chat.commandCenter.enabled": false,
-    "chat.experimental.statusIndicator.enabled": true,
-    // サイドバー
-    "workbench.tree.renderIndentGuides": "always",
-    "workbench.tree.indent": 25,
-    "explorer.compactFolders": false,
-    "explorer.autoReveal": false,
-    // Diff
-    "diffEditor.renderSideBySide": true,
-    // メニューバー
-    "window.customTitleBarVisibility": "auto",
-    // パネル
-    "workbench.panel.defaultLocation": "top",
-    "testing.automaticallyOpenPeekView": "never",
-    // Color Theme
-    "workbench.colorTheme": "Monokai",
-    "workbench.iconTheme": "material-icon-theme",
-    "editor.unicodeHighlight.nonBasicASCII": false,
-    "diffEditor.wordWrap": "off",
-    // ターミナル
-    "terminal.integrated.fontFamily": "Cica",
-    "terminal.integrated.fontSize": 15,
-    // Dev Containers
-    "dev.containers.defaultExtensions": [
-        "GitHub.copilot",
-        "shd101wyy.markdown-preview-enhanced",
-        "davidanson.vscode-markdownlint",
-    ],
-    //----------------------------------------------------------
-    // 編集
-    //----------------------------------------------------------
-    "editor.formatOnSave": false,
-    "editor.acceptSuggestionOnEnter": "off",
-    "editor.tabCompletion": "off",
-    "editor.acceptSuggestionOnCommitCharacter": false,
-    "editor.suggest.insertMode": "insert",
-    "editor.unicodeHighlight.includeComments": false,
-    "editor.unicodeHighlight.ambiguousCharacters": false,
-    "files.trimTrailingWhitespace": true,
-    "files.trimTrailingWhitespaceInRegexAndStrings": false,
-    "files.insertFinalNewline": true,
-    // サジェスト
-    "github.copilot.nextEditSuggestions.enabled": true,
-    "editor.inlineSuggest.syntaxHighlightingEnabled": true,
-    "editor.inlineSuggest.enabled": true,
-    //----------------------------------------------------------
-    // 検索をエディタウィンドウで実行するように設定
-    //----------------------------------------------------------
-    "search.mode": "reuseEditor",
-    "search.searchEditor.focusResultsOnSearch": true,
-    "search.searchOnType": false,
-    //----------------------------------------------------------
-    // 同期設定
-    //----------------------------------------------------------
-    "settingsSync.ignoredSettings": [],
-    "settingsSync.ignoredExtensions": [
-        "github.copilot",
-        "github.copilot-chat"
-    ],
-    "settingsSync.keybindingsPerPlatform": false,
-    //----------------------------------------------------------
-    // おまけ
-    //----------------------------------------------------------
-    "editor.cursorSmoothCaretAnimation": "on",
-    "editor.smoothScrolling": true,
-    // サイドバー？
-    "workbench.list.smoothScrolling": true,
-    // ターミナル？
-    "terminal.integrated.smoothScrolling": true,
-    //----------------------------------------------------------
-    // LSP： Python
-    //----------------------------------------------------------
-    "[python]": {
-        "editor.defaultFormatter": "charliermarsh.ruff",
-        "editor.formatOnSave": true,
-        "editor.codeActionsOnSave": {
-            "source.organizeImports": "explicit"
-        }
-    },
-    "python.analysis.typeCheckingMode": "strict",
-    "python.analysis.exclude": [
-        ".venv/**",
-        "tests/**",
-        "**/*.ipynb"
-    ],
-    "python.analysis.ignore": [
-        ".venv/**",
-    ],
-    "python.envFile": "${workspaceFolder}/.envrc",
-    "notebook.formatOnSave.enabled": true,
-    "notebook.formatOnCellExecution": true,
-    "notebook.lineNumbers": "on",
-    "notebook.outline.showCodeCells": true,
-    "jupyter.notebookFileRoot": "${workspaceFolder}",
-    //----------------------------------------------------------
-    // LSP: Markdownの設定
-    //----------------------------------------------------------
-    "[markdown]": {
-        "files.trimTrailingWhitespace": false,
-        "editor.tabSize": 2,
-        "editor.quickSuggestions": {
-            "other": true,
-            "comments": false,
-            "strings": false,
-        },
-        "editor.snippetSuggestions": "bottom",
-        "editor.suggest.showWords": true,
-        "editor.wordWrap": "off",
-        "editor.defaultFormatter": "DavidAnson.vscode-markdownlint",
-    },
-    // Markdown Lint
-    "markdownlint.config": {
-        "MD007": {
-            "indent": 2
-        },
-        // MD033: Inline HTMLを無効化
-        "MD033": false
-    },
-    // その他の設定
-    "markdown-preview-enhanced.plantumlServer": "http://localhost:49153/svg/",
-    "markdown-preview-enhanced.breakOnSingleNewLine": false,
-    "markdown-preview-enhanced.automaticallyShowPreviewOfMarkdownBeingEdited": false,
-    "markdown-preview-enhanced.scrollSync": true,
-    "markdown.copyFiles.destination": {
-        "*": "${documentDirName}/images/${documentBaseName}.${fileName/^(.+)\\.([^.]+)/$2/}"
-    },
-    // カラーテーマ
-    "markdown-preview-enhanced.previewTheme": "atom-light.css",
-    "markdown-preview-enhanced.codeBlockTheme": "atom-light.css",
-    //----------------------------------------------------------
-    // 拡張機能：ToDo Tree
-    //----------------------------------------------------------
-    "todo-tree.tree.showCountsInTree": true,
-    "todo-tree.filtering.includeHiddenFiles": false,
-    "todo-tree.general.tags": [
-        "BUG",
-        "HACK",
-        "FIXME",
-        "TODO",
-        "XXX",
-        "- [ ]"
-    ],
-    "todo-tree.highlights.customHighlight": {
-        "- [ ]": {
-            "icon": "check",
-            "type": "text",
-            "foreground": "#FFFFFF",
-            "background": "#FFFF00",
-            "opacity": 50,
-            "iconColour": "#00FF00"
-        }
-    },
-    "todo-tree.general.statusBar": "current file",
-    "todo-tree.filtering.excludeGlobs": [
-        "**/node_modules/*/**",
-        "**/*.patch"
-    ],
-    "todo-tree.highlights.useColourScheme": true,
-    //----------------------------------------------------------
-    // 拡張機能：Error Lens
-    //----------------------------------------------------------
-    "errorLens.enabled": true,
-    //----------------------------------------------------------
-    // 拡張機能：GitLens
-    //----------------------------------------------------------
-    "gitlens.mode.active": "zen",
-    //----------------------------------------------------------
-    // 拡張機能：GitHub Copilot
-    //----------------------------------------------------------
-    // "github.copilot.editor.enableAutoCompletions": true,
-    "github.copilot.chat.localeOverride": "ja",
-    //----------------------------------------------------------
-    // 拡張機能：Path Autocomplete
-    //----------------------------------------------------------
-    "path-autocomplete.pathMappings": {
-        "./": "${workspace}/src",
-    },
-    //----------------------------------------------------------
-    // 拡張機能：VSCode Vim
-    //----------------------------------------------------------
-    "vim.leader": "<space>",
-    "vim.easymotion": true,
-    "vim.camelCaseMotion.enable": true,
-    "vim.incsearch": true,
-    "vim.hlsearch": true,
-    "vim.visualstar": true,
-    "vim.useCtrlKeys": true,
-    "vim.handleKeys": {
-        "<C-s>": false,
-        "<C-b>": false,
-        "<C-p>": false,
-        "<C-k>": false
-    },
-    "vim.useSystemClipboard": true,
-    "vim.normalModeKeyBindingsNonRecursive": [
-        {
-            "before": [
-                "j",
-            ],
-            "after": [
-                "g",
-                "j"
-            ]
-        },
-        {
-            "before": [
-                "k",
-            ],
-            "after": [
-                "g",
-                "k"
-            ]
-        },
-        {
-            "before": [
-                "g",
-                "j"
-            ],
-            "after": [
-                "j"
-            ]
-        },
-        {
-            "before": [
-                "g",
-                "k"
-            ],
-            "after": [
-                "k"
-            ]
-        },
-        {
-            "before": [
-                "}",
-            ],
-            "after": [
-                "}",
-                "g",
-                "j"
-            ]
-        },
-        {
-            "before": [
-                "{",
-            ],
-            "after": [
-                "{",
-                "g",
-                "k"
-            ]
-        },
-        {
-            "before": [
-                "<leader>",
-                "p"
-            ],
-            "after": [
-                "\"",
-                "0",
-                "p"
-            ]
-        },
-        {
-            "before": [
-                "<leader>",
-                "P"
-            ],
-            "after": [
-                "\"",
-                "0",
-                "P"
-            ]
-        },
-        {
-            "before": [
-                "s"
-            ],
-            "after": [
-                "<leader>",
-                "<leader>",
-                "<leader>",
-                "b",
-                "d",
-                "w",
-            ]
-        },
-        {
-            "before": [
-                "*"
-            ],
-            "after": [
-                "*",
-                "N",
-                "z",
-                "z"
-            ],
-        },
-        {
-            "before": [
-                "<C-l>"
-            ],
-            "after": [],
-            "commands": [
-                ":nohlsearch",
-            ]
-        },
-        {
-            "before": [
-                "u"
-            ],
-            "after": [],
-            "commands": [
-                "undo"
-            ]
-        },
-        {
-            "before": [
-                "<C-r>"
-            ],
-            "after": [],
-            "commands": [
-                "redo"
-            ]
-        }
-    ],
-    "vim.visualModeKeyBindingsNonRecursive": [
-        {
-            "before": [
-                "p"
-            ],
-            "after": [
-                "\"",
-                "_",
-                "d",
-                "P"
-            ]
-        },
-        {
-            "before": [
-                "P"
-            ],
-            "after": [
-                "p"
-            ]
-        },
-    ],
-    //----------------------------------------------------------
-    // 拡張機能：Code Spell Checker
-    //----------------------------------------------------------
-    "cSpell.allowCompoundWords": true,
-    "cSpell.showAutocompleteDirectiveSuggestions": true,
-    "cSpell.userWords": [
-        "abatch",
-        "abeja",
-        "acall",
-        "addrgenmode",
-        "addvals",
-        "adxohv",
-        "ainvoke",
-        "alacritty",
-        "alnum",
-        "anacron",
-        "Aomori",
-        "aozora",
-        "appctl",
-        "appimage",
-        "appimages",
-        "arun",
-        "ASIL",
-        "asort",
-        "asorti",
-        "astype",
-        "asvetliakov",
-        "asyncio",
-        "autoip",
-        "autoipd",
-        "Avahi",
-        "bindkey",
-        "bluetoothctl",
-        "captoinfo",
-        "cdrom",
-        "chromadb",
-        "chsh",
-        "Cica",
-        "CICD",
-        "CIFAR",
-        "clippy",
-        "cmdline",
-        "Cmnd",
-        "cnums",
-        "coef",
-        "committia",
-        "CONVFMT",
-        "crontabs",
-        "CUDA",
-        "cudatoolkit",
-        "cudnn",
-        "cyberagent",
-        "Cypher",
-        "dadd",
-        "Dall",
-        "dateutils",
-        "DBCC",
-        "dconv",
-        "ddiff",
-        "Demux",
-        "direnv",
-        "displacy",
-        "dlib",
-        "dnsmasq",
-        "dotenv",
-        "dotfiles",
-        "dport",
-        "dropna",
-        "dround",
-        "drwx",
-        "drwxr",
-        "drwxrwxr",
-        "drwxrwxrwt",
-        "dseq",
-        "dtype",
-        "elif",
-        "ELYZA",
-        "enduml",
-        "ents",
-        "envrc",
-        "ERRNO",
-        "esac",
-        "exmap",
-        "eXmotion",
-        "Faiss",
-        "falsefwupd",
-        "falsegdm",
-        "falsehplip",
-        "falsesssd",
-        "falsetatsuya",
-        "falseuuidd",
-        "fcitx",
-        "fclose",
-        "fgetc",
-        "fgets",
-        "fopen",
-        "FPAT",
-        "fprintf",
-        "fputc",
-        "fputs",
-        "fread",
-        "frecency",
-        "fscanf",
-        "fsspec",
-        "fwrite",
-        "fwupd",
-        "gantt",
-        "genai",
-        "generativeai",
-        "geqn",
-        "getc",
-        "glepnir",
-        "gpic",
-        "GPTs",
-        "graphd",
-        "Groq",
-        "groupby",
-        "gsub",
-        "hasegawa",
-        "HILS",
-        "Homebrewer",
-        "HPLIP",
-        "hrsh",
-        "hstack",
-        "ibus",
-        "Iface",
-        "iloc",
-        "importances",
-        "imshow",
-        "imwrite",
-        "iname",
-        "inet",
-        "infty",
-        "inplace",
-        "Insta",
-        "iplantuml",
-        "ipynb",
-        "ircd",
-        "isort",
-        "iterrows",
-        "itertools",
-        "Iwate",
-        "janome",
-        "jayp",
-        "jnoortheen",
-        "jshtml",
-        "Kajabi",
-        "kwargs",
-        "LCEL",
-        "levelno",
-        "Lflow",
-        "libbz",
-        "libexec",
-        "libncursesw",
-        "libx",
-        "lladdr",
-        "llms",
-        "LMSYS",
-        "longname",
-        "lrwxrwxrwx",
-        "lshw",
-        "lspconfig",
-        "lspkind",
-        "lspsaga",
-        "lstrip",
-        "luacheck",
-        "luarocks",
-        "mathbb",
-        "matsuo",
-        "mattn",
-        "maxmtu",
-        "mecab",
-        "MECE",
-        "MesloLGS",
-        "metad",
-        "minmtu",
-        "MISRA",
-        "Miyagi",
-        "miyake",
-        "mkhl",
-        "mktime",
-        "mlflow",
-        "mlocate",
-        "mogrify",
-        "mojimoji",
-        "Momiage",
-        "Mozc",
-        "MPFR",
-        "mpmath",
-        "MTEB",
-        "naersk",
-        "NAND",
-        "ndarray",
-        "ndarry",
-        "Nejumi",
-        "neovim",
-        "neox",
-        "netdev",
-        "networkx",
-        "ngql",
-        "nixos",
-        "nixpkgs",
-        "NLTK",
-        "nmap",
-        "noclobber",
-        "nologinavahi",
-        "nologindnsmasq",
-        "nologinlp",
-        "nologinnm",
-        "nologinrtkit",
-        "nologinsys",
-        "nologinsyslog",
-        "nologinsystemd",
-        "nologintcpdump",
-        "nologintss",
-        "nologinuucp",
-        "nologinwhoopsie",
-        "noqueue",
-        "noremap",
-        "nproc",
-        "nsswitch",
-        "numpy",
-        "numrxqueues",
-        "numtide",
-        "numtxqueues",
-        "nvim",
-        "nvimtools",
-        "nvtop",
-        "obcommand",
-        "ollama",
-        "onsails",
-        "openai",
-        "openpyxl",
-        "optim",
-        "ortoolpy",
-        "osumi",
-        "oxalica",
-        "Oyomi",
-        "pcapng",
-        "PCRE",
-        "peft",
-        "persistenced",
-        "pfnet",
-        "pkgs",
-        "pkill",
-        "plamo",
-        "plantuml",
-        "pmatrix",
-        "powerlevel10k",
-        "printenv",
-        "proba",
-        "proto",
-        "protoc",
-        "pstree",
-        "Pulumi",
-        "putc",
-        "pwsh",
-        "pyarrow",
-        "Pydantic",
-        "pyenv",
-        "pyfunc",
-        "pyplot",
-        "pyproject",
-        "pyright",
-        "pytest",
-        "pyvis",
-        "qdisc",
-        "Qdrant",
-        "Qiita",
-        "qlen",
-        "Qwen",
-        "rerank",
-        "Reranker",
-        "rhysd",
-        "rinna",
-        "ripgrep",
-        "RLENGTH",
-        "RSTART",
-        "rstrip",
-        "runc",
-        "rustc",
-        "rwxr",
-        "rwxrw",
-        "rwxrwxr",
-        "sakurai",
-        "sakuraitatsuya",
-        "scanf",
-        "scopeid",
-        "segs",
-        "SEOBDS",
-        "shibang",
-        "shopt",
-        "Simulink",
-        "sklearn",
-        "smali",
-        "spacy",
-        "sprintf",
-        "srand",
-        "stabilityai",
-        "startuml",
-        "stdenv",
-        "stdlib",
-        "strcpy",
-        "strncat",
-        "strncpy",
-        "struct",
-        "Structurer",
-        "Subar",
-        "Sudachi",
-        "swapfile",
-        "sympy",
-        "systime",
-        "tatsuya",
-        "tavily",
-        "tcpdump",
-        "teip",
-        "telesoho",
-        "textproto",
-        "tiktoken",
-        "tinet",
-        "toarray",
-        "tohoku",
-        "toppm",
-        "Tpng",
-        "trixie",
-        "TSTP",
-        "txqueuelen",
-        "Udemy",
-        "ugoa",
-        "unmap",
-        "unxz",
-        "upconf",
-        "updatedb",
-        "UPOS",
-        "USDM",
-        "uucp",
-        "uuidd",
-        "uvicorn",
-        "venv",
-        "vesoft",
-        "vimrc",
-        "virtualenvs",
-        "Vlog",
-        "vmap",
-        "vsctl",
-        "webui",
-        "Wikification",
-        "wincmd",
-        "xaxis",
-        "xhost",
-        "xlabel",
-        "xlarge",
-        "xlim",
-        "xscale",
-        "xsel",
-        "xticks",
-        "xzcat",
-        "yaxis",
-        "ylabel",
-        "ylim",
-        "Yolo",
-        "yolov",
-        "Youko",
-        "yscale",
-        "yticks",
-        "YYYYMMMDD",
-        "Zenn",
-        "zeroos",
-        "zshdaemon",
-        "zshnvidia"
-    ],
-    "remote.SSH.remotePlatform": {
-        "from_windows": "linux"
-    },
-    "git.autofetch": true,
-    "markdown-preview-enhanced.enablePreviewZenMode": false,
-    "gitlens.ai.model": "vscode",
-    "gitlens.ai.vscode.model": "copilot:gpt-4.1",
-    "workbench.sideBar.location": "right",
-    "json.schemaDownload.trustedDomains": {
-        "https://schemastore.azurewebsites.net/": true,
-        "https://raw.githubusercontent.com/": true,
-        "https://www.schemastore.org/": true,
-        "https://json.schemastore.org/": true,
-        "https://json-schema.org/": true,
-        "https://biomejs.dev": true
-    },
+  //----------------------------------------------------------
+  // 基本設定
+  //----------------------------------------------------------
+  "extensions.ignoreRecommendations": true,
+  "remote.autoForwardPortsSource": "hybrid",
+  "security.workspace.trust.untrustedFiles": "open",
+  "window.restoreWindows": "none",
+  "window.openFoldersInNewWindow": "off",
+  "workbench.editor.enablePreview": true,
+  "workbench.startupEditor": "none",
+  "workbench.editor.editorActionsLocation": "hidden",
+  // Git
+  "git.openRepositoryInParentFolders": "never",
+  "git.autofetch": true,
+  // Diff
+  "diffEditor.ignoreTrimWhitespace": true,
+  //----------------------------------------------------------
+  // UI
+  //----------------------------------------------------------
+  "editor.tabSize": 2,
+  "editor.detectIndentation": false,
+  "editor.fontSize": 17,
+  "editor.fontFamily": "Cica",
+  "editor.fontLigatures": true,
+  "editor.wordWrap": "off",
+  "editor.minimap.enabled": false,
+  "editor.lineNumbers": "relative",
+  "editor.renderLineHighlight": "all",
+  "editor.showFoldingControls": "always",
+  "editor.suggest.preview": false,
+  "editor.parameterHints.enabled": false,
+  "editor.stickyScroll.enabled": true,
+  "editor.guides.bracketPairs": true,
+  "editor.tokenColorCustomizations": {
+      "textMateRules": [
+          {
+              "scope": [
+                  "variable"
+              ],
+              "settings": {
+                  "fontStyle": "italic"
+              }
+          },
+          {
+              "scope": "meta.embedded.block.json",
+              "settings": {
+                  "foreground": "#000000" // JSONブロックの文字列の色を赤に変更
+              }
+          }
+      ],
+      "[Noctis Sereno]": {
+          "textMateRules": [
+              {
+                  "scope": [
+                      "invalid.illegal.expected-dictionary-separator.json",
+                      "invalid.illegal.expected-array-separator.json"
+                  ],
+                  "settings": {
+                      "foreground": "#B16A4E" // Markdown内のJSONブロックの文字列の色を赤に変更
+                  }
+              }
+          ]
+      }
+  },
+  "workbench.colorCustomizations": {},
+  "workbench.editor.wrapTabs": true,
+  "workbench.editor.tabSizing": "shrink",
+  "workbench.navigationControl.enabled": false,
+  // サイドバー
+  "workbench.sideBar.location": "right",
+  "workbench.tree.renderIndentGuides": "always",
+  "workbench.tree.indent": 25,
+  "explorer.compactFolders": false,
+  "explorer.autoReveal": false,
+  // Diff
+  "diffEditor.renderSideBySide": true,
+  // メニューバー
+  "window.customTitleBarVisibility": "auto",
+  // パネル
+  "workbench.panel.defaultLocation": "top",
+  "testing.automaticallyOpenPeekView": "never",
+  // Color Theme
+  "workbench.colorTheme": "Monokai",
+  "workbench.iconTheme": "material-icon-theme",
+  "editor.unicodeHighlight.nonBasicASCII": false,
+  "diffEditor.wordWrap": "off",
+  // ターミナル
+  "terminal.integrated.fontFamily": "Cica",
+  "terminal.integrated.fontSize": 15,
+  //----------------------------------------------------------
+  // Remote
+  //----------------------------------------------------------
+  "remote.SSH.remotePlatform": {
+      "from_windows": "linux"
+  },
+  //----------------------------------------------------------
+  // Dev Containers
+  //----------------------------------------------------------
+  "dev.containers.defaultExtensions": [
+      "GitHub.copilot",
+      "shd101wyy.markdown-preview-enhanced",
+      "davidanson.vscode-markdownlint"
+  ],
+  //----------------------------------------------------------
+  // 編集
+  //----------------------------------------------------------
+  "editor.formatOnSave": false,
+  "editor.acceptSuggestionOnEnter": "off",
+  "editor.tabCompletion": "off",
+  "editor.acceptSuggestionOnCommitCharacter": false,
+  "editor.suggest.insertMode": "insert",
+  "editor.unicodeHighlight.includeComments": false,
+  "editor.unicodeHighlight.ambiguousCharacters": false,
+  "files.trimTrailingWhitespace": true,
+  "files.trimTrailingWhitespaceInRegexAndStrings": false,
+  "files.insertFinalNewline": true,
+  // サジェスト
+  "github.copilot.nextEditSuggestions.enabled": true,
+  "editor.inlineSuggest.syntaxHighlightingEnabled": false,
+  "editor.inlineSuggest.enabled": false,
+  //----------------------------------------------------------
+  // 検索をエディタウィンドウで実行するように設定
+  //----------------------------------------------------------
+  "search.mode": "reuseEditor",
+  "search.searchEditor.focusResultsOnSearch": true,
+  "search.searchOnType": false,
+  //----------------------------------------------------------
+  // 同期設定
+  //----------------------------------------------------------
+  "settingsSync.ignoredSettings": [],
+  "settingsSync.ignoredExtensions": [
+      "github.copilot",
+      "github.copilot-chat"
+  ],
+  "settingsSync.keybindingsPerPlatform": false,
+  //----------------------------------------------------------
+  // おまけ
+  //----------------------------------------------------------
+  "editor.cursorSmoothCaretAnimation": "on",
+  "editor.smoothScrolling": true,
+  // サイドバー？
+  "workbench.list.smoothScrolling": true,
+  // ターミナル？
+  "terminal.integrated.smoothScrolling": true,
+  //----------------------------------------------------------
+  // LSP： Python
+  //----------------------------------------------------------
+  "[python]": {
+      "editor.defaultFormatter": "charliermarsh.ruff",
+      "editor.formatOnSave": true,
+      "editor.codeActionsOnSave": {
+          "source.organizeImports": "explicit"
+      }
+  },
+  "python.analysis.typeCheckingMode": "strict",
+  "python.analysis.exclude": [
+      ".venv/**",
+      "tests/**",
+      "**/*.ipynb"
+  ],
+  "python.analysis.ignore": [
+      ".venv/**"
+  ],
+  "python.envFile": "${workspaceFolder}/.envrc",
+  "notebook.formatOnSave.enabled": true,
+  "notebook.formatOnCellExecution": true,
+  "notebook.lineNumbers": "on",
+  "notebook.outline.showCodeCells": true,
+  "jupyter.notebookFileRoot": "${workspaceFolder}",
+  //----------------------------------------------------------
+  // LSP: Markdownの設定
+  //----------------------------------------------------------
+  "[markdown]": {
+      "files.trimTrailingWhitespace": false,
+      "editor.tabSize": 2,
+      "editor.quickSuggestions": {
+          "other": true,
+          "comments": false,
+          "strings": false
+      },
+      "editor.snippetSuggestions": "bottom",
+      "editor.suggest.showWords": true,
+      "editor.wordWrap": "off",
+      "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
+  },
+  // Markdown Lint
+  "markdownlint.config": {
+      "MD007": {
+          "indent": 2
+      },
+      // MD033: Inline HTMLを無効化
+      "MD033": false
+  },
+  // その他の設定
+  "markdown-preview-enhanced.plantumlServer": "http://localhost:49153/svg/",
+  "markdown-preview-enhanced.breakOnSingleNewLine": false,
+  "markdown-preview-enhanced.automaticallyShowPreviewOfMarkdownBeingEdited": false,
+  "markdown-preview-enhanced.scrollSync": true,
+  "markdown.extension.list.indentationSize": "inherit",
+  "markdown.extension.orderedList.marker": "ordered",
+  "markdown.copyFiles.destination": {
+      "*": "${documentDirName}/images/${documentBaseName}.${fileName/^(.+)\\.([^.]+)/$2/}"
+  },
+  "markdown-preview-enhanced.enablePreviewZenMode": false,
+  // カラーテーマ
+  "markdown-preview-enhanced.previewTheme": "atom-light.css",
+  "markdown-preview-enhanced.codeBlockTheme": "atom-light.css",
+  //----------------------------------------------------------
+  // 拡張機能：ToDo Tree
+  //----------------------------------------------------------
+  "todo-tree.tree.showCountsInTree": true,
+  "todo-tree.filtering.includeHiddenFiles": false,
+  "todo-tree.general.tags": [
+      "BUG",
+      "HACK",
+      "FIXME",
+      "TODO",
+      "XXX",
+      "- [ ]"
+  ],
+  "todo-tree.highlights.customHighlight": {
+      "- [ ]": {
+          "icon": "check",
+          "type": "text",
+          "foreground": "#FFFFFF",
+          "background": "#FFFF00",
+          "opacity": 50,
+          "iconColour": "#00FF00"
+      }
+  },
+  "todo-tree.general.statusBar": "current file",
+  "todo-tree.filtering.excludeGlobs": [
+      "**/node_modules/*/**",
+      "**/*.patch"
+  ],
+  "todo-tree.highlights.useColourScheme": true,
+  //----------------------------------------------------------
+  // 拡張機能：Error Lens
+  //----------------------------------------------------------
+  "errorLens.enabled": true,
+  //----------------------------------------------------------
+  // 拡張機能：GitLens
+  //----------------------------------------------------------
+  "gitlens.mode.active": "zen",
+  "gitlens.ai.model": "vscode",
+  "gitlens.ai.vscode.model": "copilot:gpt-4.1",
+  //----------------------------------------------------------
+  // 拡張機能：GitHub Copilot
+  //----------------------------------------------------------
+  // "github.copilot.editor.enableAutoCompletions": true,
+  "github.copilot.chat.localeOverride": "ja",
+  "chat.commandCenter.enabled": false,
+  "chat.experimental.statusIndicator.enabled": true,
+  //----------------------------------------------------------
+  // 拡張機能：Path Autocomplete
+  //----------------------------------------------------------
+  "path-autocomplete.pathMappings": {
+      "./": "${workspace}/src"
+  },
+  //----------------------------------------------------------
+  // 拡張機能：VSCode Vim
+  //----------------------------------------------------------
+  "vim.leader": "<space>",
+  "vim.easymotion": true,
+  "vim.camelCaseMotion.enable": true,
+  "vim.incsearch": true,
+  "vim.hlsearch": true,
+  "vim.visualstar": true,
+  "vim.useCtrlKeys": true,
+  "vim.handleKeys": {
+      "<C-s>": false,
+      "<C-b>": false,
+      "<C-p>": false,
+      "<C-k>": false
+  },
+  "vim.useSystemClipboard": true,
+  "vim.normalModeKeyBindingsNonRecursive": [
+      {
+          "before": [
+              "j"
+          ],
+          "after": [
+              "g",
+              "j"
+          ]
+      },
+      {
+          "before": [
+              "k"
+          ],
+          "after": [
+              "g",
+              "k"
+          ]
+      },
+      {
+          "before": [
+              "g",
+              "j"
+          ],
+          "after": [
+              "j"
+          ]
+      },
+      {
+          "before": [
+              "g",
+              "k"
+          ],
+          "after": [
+              "k"
+          ]
+      },
+      {
+          "before": [
+              "}"
+          ],
+          "after": [
+              "}",
+              "g",
+              "j"
+          ]
+      },
+      {
+          "before": [
+              "{"
+          ],
+          "after": [
+              "{",
+              "g",
+              "k"
+          ]
+      },
+      {
+          "before": [
+              "<leader>",
+              "p"
+          ],
+          "after": [
+              "\"",
+              "0",
+              "p"
+          ]
+      },
+      {
+          "before": [
+              "<leader>",
+              "P"
+          ],
+          "after": [
+              "\"",
+              "0",
+              "P"
+          ]
+      },
+      {
+          "before": [
+              "s"
+          ],
+          "after": [
+              "<leader>",
+              "<leader>",
+              "<leader>",
+              "b",
+              "d",
+              "w"
+          ]
+      },
+      {
+          "before": [
+              "*"
+          ],
+          "after": [
+              "*",
+              "N",
+              "z",
+              "z"
+          ]
+      },
+      {
+          "before": [
+              "<C-l>"
+          ],
+          "after": [],
+          "commands": [
+              ":nohlsearch"
+          ]
+      },
+      {
+          "before": [
+              "u"
+          ],
+          "after": [],
+          "commands": [
+              "undo"
+          ]
+      },
+      {
+          "before": [
+              "<C-r>"
+          ],
+          "after": [],
+          "commands": [
+              "redo"
+          ]
+      }
+  ],
+  "vim.visualModeKeyBindingsNonRecursive": [
+      {
+          "before": [
+              "p"
+          ],
+          "after": [
+              "\"",
+              "_",
+              "d",
+              "P"
+          ]
+      },
+      {
+          "before": [
+              "P"
+          ],
+          "after": [
+              "p"
+          ]
+      }
+  ],
+  //----------------------------------------------------------
+  // 拡張機能：Code Spell Checker
+  //----------------------------------------------------------
+  "cSpell.allowCompoundWords": true,
+  "cSpell.showAutocompleteDirectiveSuggestions": true,
+  "cSpell.userWords": [
+    "abatch",
+    "abeja",
+    "acall",
+    "addrgenmode",
+    "addvals",
+    "adxohv",
+    "ainvoke",
+    "alacritty",
+    "alnum",
+    "anacron",
+    "Aomori",
+    "aozora",
+    "appctl",
+    "appimage",
+    "appimages",
+    "arun",
+    "ASIL",
+    "asort",
+    "asorti",
+    "astype",
+    "asvetliakov",
+    "asyncio",
+    "autoip",
+    "autoipd",
+    "Avahi",
+    "bindkey",
+    "bluetoothctl",
+    "captoinfo",
+    "cdrom",
+    "chromadb",
+    "chsh",
+    "Cica",
+    "CICD",
+    "CIFAR",
+    "clippy",
+    "cmdline",
+    "Cmnd",
+    "cnums",
+    "coef",
+    "committia",
+    "CONVFMT",
+    "crontabs",
+    "CUDA",
+    "cudatoolkit",
+    "cudnn",
+    "cyberagent",
+    "Cypher",
+    "dadd",
+    "Dall",
+    "dateutils",
+    "davidanson",
+    "DBCC",
+    "dconv",
+    "ddiff",
+    "Demux",
+    "direnv",
+    "displacy",
+    "dlib",
+    "dnsmasq",
+    "dotenv",
+    "dotfiles",
+    "dport",
+    "dropna",
+    "dround",
+    "drwx",
+    "drwxr",
+    "drwxrwxr",
+    "drwxrwxrwt",
+    "dseq",
+    "dtype",
+    "elif",
+    "ELYZA",
+    "enduml",
+    "ents",
+    "envrc",
+    "ERRNO",
+    "esac",
+    "exmap",
+    "eXmotion",
+    "Faiss",
+    "falsefwupd",
+    "falsegdm",
+    "falsehplip",
+    "falsesssd",
+    "falsetatsuya",
+    "falseuuidd",
+    "fcitx",
+    "fclose",
+    "fgetc",
+    "fgets",
+    "fopen",
+    "FPAT",
+    "fprintf",
+    "fputc",
+    "fputs",
+    "fread",
+    "frecency",
+    "fscanf",
+    "fsspec",
+    "fwrite",
+    "fwupd",
+    "gantt",
+    "genai",
+    "generativeai",
+    "geqn",
+    "getc",
+    "glepnir",
+    "gpic",
+    "GPTs",
+    "graphd",
+    "Groq",
+    "groupby",
+    "gsub",
+    "hasegawa",
+    "HILS",
+    "hlsearch",
+    "Homebrewer",
+    "HPLIP",
+    "hrsh",
+    "hstack",
+    "ibus",
+    "Iface",
+    "iloc",
+    "importances",
+    "imshow",
+    "imwrite",
+    "iname",
+    "inet",
+    "infty",
+    "inplace",
+    "Insta",
+    "iplantuml",
+    "ipynb",
+    "ircd",
+    "isort",
+    "iterrows",
+    "itertools",
+    "Iwate",
+    "janome",
+    "jayp",
+    "jnoortheen",
+    "jshtml",
+    "Kajabi",
+    "kwargs",
+    "LCEL",
+    "levelno",
+    "Lflow",
+    "libbz",
+    "libexec",
+    "libncursesw",
+    "libx",
+    "lladdr",
+    "llms",
+    "LMSYS",
+    "longname",
+    "lrwxrwxrwx",
+    "lshw",
+    "lspconfig",
+    "lspkind",
+    "lspsaga",
+    "lstrip",
+    "luacheck",
+    "luarocks",
+    "mathbb",
+    "matsuo",
+    "mattn",
+    "maxmtu",
+    "mecab",
+    "MECE",
+    "MesloLGS",
+    "metad",
+    "minmtu",
+    "MISRA",
+    "Miyagi",
+    "miyake",
+    "mkhl",
+    "mktime",
+    "mlflow",
+    "mlocate",
+    "mogrify",
+    "mojimoji",
+    "Momiage",
+    "Monokai",
+    "Mozc",
+    "MPFR",
+    "mpmath",
+    "MTEB",
+    "naersk",
+    "NAND",
+    "ndarray",
+    "ndarry",
+    "Nejumi",
+    "neovim",
+    "neox",
+    "netdev",
+    "networkx",
+    "ngql",
+    "nixos",
+    "nixpkgs",
+    "NLTK",
+    "nmap",
+    "noclobber",
+    "Noctis",
+    "nohlsearch",
+    "nologinavahi",
+    "nologindnsmasq",
+    "nologinlp",
+    "nologinnm",
+    "nologinrtkit",
+    "nologinsys",
+    "nologinsyslog",
+    "nologinsystemd",
+    "nologintcpdump",
+    "nologintss",
+    "nologinuucp",
+    "nologinwhoopsie",
+    "noqueue",
+    "noremap",
+    "nproc",
+    "nsswitch",
+    "numpy",
+    "numrxqueues",
+    "numtide",
+    "numtxqueues",
+    "nvim",
+    "nvimtools",
+    "nvtop",
+    "obcommand",
+    "ollama",
+    "onsails",
+    "openai",
+    "openpyxl",
+    "optim",
+    "ortoolpy",
+    "osumi",
+    "oxalica",
+    "Oyomi",
+    "pcapng",
+    "PCRE",
+    "peft",
+    "persistenced",
+    "pfnet",
+    "pkgs",
+    "pkill",
+    "plamo",
+    "plantuml",
+    "pmatrix",
+    "powerlevel10k",
+    "printenv",
+    "proba",
+    "proto",
+    "protoc",
+    "pstree",
+    "Pulumi",
+    "putc",
+    "pwsh",
+    "pyarrow",
+    "Pydantic",
+    "pyenv",
+    "pyfunc",
+    "pyplot",
+    "pyproject",
+    "pyright",
+    "pytest",
+    "pyvis",
+    "qdisc",
+    "Qdrant",
+    "Qiita",
+    "qlen",
+    "Qwen",
+    "rerank",
+    "Reranker",
+    "rhysd",
+    "rinna",
+    "ripgrep",
+    "RLENGTH",
+    "RSTART",
+    "rstrip",
+    "runc",
+    "rustc",
+    "rwxr",
+    "rwxrw",
+    "rwxrwxr",
+    "sakurai",
+    "sakuraitatsuya",
+    "scanf",
+    "scopeid",
+    "segs",
+    "SEOBDS",
+    "Sereno",
+    "shibang",
+    "shopt",
+    "Simulink",
+    "sklearn",
+    "smali",
+    "spacy",
+    "sprintf",
+    "srand",
+    "stabilityai",
+    "startuml",
+    "stdenv",
+    "stdlib",
+    "strcpy",
+    "strncat",
+    "strncpy",
+    "struct",
+    "Structurer",
+    "Subar",
+    "Sudachi",
+    "swapfile",
+    "sympy",
+    "systime",
+    "tatsuya",
+    "tavily",
+    "tcpdump",
+    "teip",
+    "telesoho",
+    "textproto",
+    "tiktoken",
+    "tinet",
+    "toarray",
+    "tohoku",
+    "toppm",
+    "Tpng",
+    "trixie",
+    "TSTP",
+    "txqueuelen",
+    "Udemy",
+    "ugoa",
+    "unmap",
+    "unxz",
+    "upconf",
+    "updatedb",
+    "UPOS",
+    "USDM",
+    "uucp",
+    "uuidd",
+    "uvicorn",
+    "venv",
+    "vesoft",
+    "vimrc",
+    "virtualenvs",
+    "Vlog",
+    "vmap",
+    "vsctl",
+    "webui",
+    "Wikification",
+    "wincmd",
+    "xaxis",
+    "xhost",
+    "xlabel",
+    "xlarge",
+    "xlim",
+    "xscale",
+    "xsel",
+    "xticks",
+    "xzcat",
+    "yaxis",
+    "ylabel",
+    "ylim",
+    "Yolo",
+    "yolov",
+    "Youko",
+    "yscale",
+    "yticks",
+    "YYYYMMMDD",
+    "Zenn",
+    "zeroos",
+    "zshdaemon",
+    "zshnvidia"
+  ],
+  //----------------------------------------------------------
+  // Json Schema
+  //----------------------------------------------------------
+  "json.schemaDownload.trustedDomains": {
+      "https://schemastore.azurewebsites.net/": true,
+      "https://raw.githubusercontent.com/": true,
+      "https://www.schemastore.org/": true,
+      "https://json.schemastore.org/": true,
+      "https://json-schema.org/": true,
+      "https://biomejs.dev": true
+  }
 }

@@ -6,7 +6,8 @@
     // ### ファーカス：追加
     // =======================
     {
-        "key": "ctrl+shift+oem_3",
+        "key": "ctrl+shift+[BracketLeft]",
+        // "key": "ctrl+shift+oem_3",
         "command": "runCommands",
         "args": {
             "commands": [
@@ -17,7 +18,8 @@
         "when": "!terminalFocus"
     },
     {
-        "key": "ctrl+shift+oem_3",
+        "key": "ctrl+shift+[BracketLeft]",
+        // "key": "ctrl+shift+oem_3",
         "command": "runCommands",
         "args": {
             "commands": [
@@ -28,17 +30,20 @@
         "when": "terminalFocus && panelMaximized"
     },
     {
-        "key": "ctrl+shift+oem_3",
+        "key": "ctrl+shift+[BracketLeft]",
+        // "key": "ctrl+shift+oem_3",
         "command": "workbench.action.toggleMaximizedPanel",
         "when": "terminalFocus && !panelMaximized"
     },
     {
-        "key": "ctrl+oem_3",
+        "key": "ctrl+[BracketLeft]",
+        // "key": "ctrl+oem_3",
         "command": "workbench.action.terminal.focus",
         "when": "!terminalFocus"
     },
     {
-        "key": "ctrl+oem_3",
+        "key": "ctrl+[BracketLeft]",
+        // "key": "ctrl+oem_3",
         "command": "workbench.action.focusFirstEditorGroup",
         "when": "terminalFocus"
     },
