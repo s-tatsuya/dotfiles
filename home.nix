@@ -55,7 +55,7 @@ in {
     settings = {
       user = {
         name = "Tatsuya Sakurai";
-        email = "tatsuya.sakurai@exmotion.co.jp";
+        email = "s.tatsuya0123@gmail.com";
       };
       core = {
         editor = "nvim";
