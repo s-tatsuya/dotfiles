@@ -20,7 +20,9 @@ in {
     ".config/fish/functions".source = ./config/fish/functions;
     ".config/fish/fish_plugins".source = ./config/fish/fish_plugins;
 
-    ".config/zellij/config.kdl".source = ./config/zellij/config.kdl;
+    ".config/zellij/config.kdl".source = if pkgs.stdenv.isDarwin
+      then ./config/zellij/config-mac.kdl
+      else ./config/zellij/config.kdl;
     ".config/nvim".source = ./config/nvim;
     ".config/alacritty".source = ./config/alacritty;
   };
@@ -38,6 +40,8 @@ in {
     ripgrep
     github-copilot-cli
     imagemagick
+    plantuml
+    mermaid-cli
   ];
 
   programs.bash = {

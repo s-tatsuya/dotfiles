@@ -3,3 +3,6 @@ config/fish/fish_variables
 
 # Zellij
 config/zellij/*.bak
+
+# Neovim
+config/nvim/lazy-lock.json
