@@ -1,5 +1,5 @@
 {
-  description = "My Dotfiles Flake";
+  description = "Multi-platform Dotfiles Flake";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
@@ -9,21 +9,32 @@
     };
   };
 
-  outputs = { nixpkgs, home-manager, ... }:
+  outputs = { self, nixpkgs, home-manager, ... }:
     let
-      system = "x86_64-linux";
-      pkgs = import nixpkgs {
+      # 共通のパッケージ設定を関数化
+      mkPkgs = system: import nixpkgs {
         inherit system;
-        # 特定のパッケージ名だけを許可する設定
         config.allowUnfreePredicate = pkg: builtins.elem (nixpkgs.lib.getName pkg) [
           "github-copilot-cli"
           "vscode"
         ];
       };
     in {
-      homeConfigurations."default" = home-manager.lib.homeManagerConfiguration {
-        inherit pkgs;
-        modules = [ ./home.nix ];
+      homeConfigurations = {
+        # Mac用 (make apply の際に .#default または .#mac と指定)
+        "mac" = home-manager.lib.homeManagerConfiguration {
+          pkgs = mkPkgs "aarch64-darwin";
+          modules = [ ./home.nix ];
+        };
+
+        # Ubuntu用 (make apply の際に .#ubuntu と指定)
+        "ubuntu" = home-manager.lib.homeManagerConfiguration {
+          pkgs = mkPkgs "x86_64-linux";
+          modules = [ ./home.nix ];
+        };
+        
+        # 以前の "default" も残しておく場合（Macをデフォルトにする例）
+        "default" = self.homeConfigurations.mac;
       };
     };
 }
