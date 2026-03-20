@@ -25,14 +25,19 @@ in {
     ".config/alacritty".source = ./config/alacritty;
   };
 
+  programs.neovim = {
+    enable = true;
+    extraLuaPackages = ps: [ ps.magick ];
+  };
+
   home.packages = with pkgs; [
     fish
-    neovim
     zellij
     docker
     docker-compose
     ripgrep
     github-copilot-cli
+    imagemagick
   ];
 
   programs.bash = {

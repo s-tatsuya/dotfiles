@@ -5,10 +5,10 @@ default_mode "locked"
 
 keybinds clear-defaults=true {
     locked {
-        bind "Ctrl space" { SwitchToMode "normal"; }
+        bind "Ctrl b" { SwitchToMode "normal"; }
     }
     normal {
-        bind "Ctrl space" { SwitchToMode "locked"; }
+        bind "Ctrl b" { SwitchToMode "locked"; }
         bind "esc" { SwitchToMode "locked"; }
         bind "left" { GoToPreviousTab; }
         bind "down" { FocusNextPane; }
