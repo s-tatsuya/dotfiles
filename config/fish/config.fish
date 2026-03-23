@@ -48,8 +48,12 @@ if status is-interactive
     # Pythonの仮想環境とパッケージの管理ツール
     # -----------------------------------------------------
     # uvの補完設定 (Fish用に出力を変更)
-    uv generate-shell-completion fish | source
-    uvx --generate-shell-completion fish | source
+    if command -q uv
+        uv generate-shell-completion fish | source
+    end
+    if command -q uvx
+        uvx --generate-shell-completion fish | source
+    end
 
     # PATHの追加 (fish_add_pathを使うと重複を防げます)
     fish_add_path "$HOME/.local/bin"
