@@ -16,9 +16,10 @@ if status is-interactive
         set -Ux SSH_AGENT_PID $SSH_AGENT_PID
     end
 
-    # 鍵をエージェントに追加（まだ追加されていない場合）
-    # 起動時にパスフレーズを一度だけ聞かれます
-    ssh-add ~/.ssh/id_ed25519 2>/dev/null
+    # 鍵をエージェントに追加（まだ追加されていない場合のみ）
+    if not ssh-add -l 2>/dev/null | string match -q "*id_ed25519*"
+        ssh-add ~/.ssh/id_ed25519
+    end
     # -----------------------------------------------------
     # エイリアスの設定
     # -----------------------------------------------------
