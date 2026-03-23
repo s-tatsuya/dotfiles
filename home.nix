@@ -43,6 +43,7 @@ in {
     imagemagick
     plantuml
     mermaid-cli
+    jre
   ];
 
   programs.bash = {
