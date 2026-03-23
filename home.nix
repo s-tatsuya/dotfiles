@@ -30,6 +30,7 @@ in {
   programs.neovim = {
     enable = true;
     extraLuaPackages = ps: [ ps.magick ];
+    vimAlias = true;
   };
 
   home.packages = with pkgs; [
