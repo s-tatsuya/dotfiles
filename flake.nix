@@ -20,6 +20,14 @@
         ];
       };
     in {
+      templates = {
+        rust = {
+          path = ./templates/rust;
+          description = "Rust development environment template";
+        };
+        # デフォルトを設定しておくと #名前 を省略できます
+        default = self.templates.rust;
+      };
       homeConfigurations = {
         # Mac用 (make apply の際に .#default または .#mac と指定)
         "mac" = home-manager.lib.homeManagerConfiguration {
