@@ -67,8 +67,6 @@
   "workbench.editor.wrapTabs": true,
   "workbench.editor.tabSizing": "shrink",
   "workbench.navigationControl.enabled": false,
-  // サイドバー
-  "workbench.sideBar.location": "right",
   "workbench.tree.renderIndentGuides": "always",
   "workbench.tree.indent": 25,
   "explorer.compactFolders": false,
