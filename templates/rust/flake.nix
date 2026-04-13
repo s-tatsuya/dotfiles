@@ -36,6 +36,8 @@
         devShells.default = pkgs.mkShell {
           nativeBuildInputs = with pkgs; [
             pkg-config
+            nil           # 言語サーバー (LSP)
+            nixpkgs-fmt   # フォーマッタ
           ];
 
           buildInputs = with pkgs; [
@@ -44,6 +46,8 @@
             pre-commit
             cargo-edit    # cargo add などが便利になる
             cargo-watch   # 自動再実行
+            direnv
+            nix-direnv
           ];
 
           # VSCodeの rust-analyzer が標準ライブラリのソースを見つけられるようにする
