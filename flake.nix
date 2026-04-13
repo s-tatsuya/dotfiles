@@ -25,6 +25,16 @@
           path = ./templates/rust;
           description = "Rust development environment template";
         };
+        # Node.js (pnpm) テンプレートの追加
+        node-pnpm = {
+          path = ./templates/node-pnpm;
+          description = "Node.js development environment with pnpm";
+        };
+        # Python テンプレートの追加
+        python = {
+          path = ./templates/python;
+          description = "Python development environment template";
+        };
         # デフォルトを設定しておくと #名前 を省略できます
         default = self.templates.rust;
       };
@@ -40,7 +50,7 @@
           pkgs = mkPkgs "x86_64-linux";
           modules = [ ./home.nix ];
         };
-        
+
         # 以前の "default" も残しておく場合（Macをデフォルトにする例）
         "default" = self.homeConfigurations.mac;
       };
