@@ -31,6 +31,8 @@ in {
     enable = true;
     extraLuaPackages = ps: [ ps.magick ];
     vimAlias = true;
+    withRuby = false;
+    withPython3 = false;
   };
 
   home.packages = with pkgs; [
@@ -61,6 +63,7 @@ in {
 
   programs.git = {
     enable = true;
+    signing.format = null;
 
     # 新しい書き方: すべて settings の中に構造化して書く
     settings = {
