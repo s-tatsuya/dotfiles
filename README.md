@@ -323,3 +323,8 @@ sudo darwin-rebuild switch --flake ~/dotfiles#mac
 - **Determinate インストーラの README は表記が古い**：`--prefer-upstream-nix` が残っているが 2025年11月10日以降は実質無効。Determinate を選ぶなら nix-darwin 側で `nix.enable = false;` が必須。設定しないと `error: Determinate detected, aborting activation`（nix-darwin の modules/system/checks.nix が出す逐語メッセージ："Determinate uses its own daemon to manage the Nix installation that conflicts with nix-darwin's native Nix management. To turn off nix-darwin's management of the Nix installation, set: `nix.enable = false;`"）で中断する。この opt-out 機構は nix-darwin PR #1313（master）・#1326（24.11）で追加された。
 - **root 実行の副作用**：`sudo darwin-rebuild` は root で走るため、プライベートフレークや SSH 鍵を要する場合に鍵が見つからないことがある。nix-darwin Issue #1471 の逐語 "Now that darwin-rebuild requires using sudo, I am unable to access private flakes / git repos, as root does not have my ssh keys, so my system fails to build." のとおり既知の摩擦点。回避策として同 Issue で "`darwin-rebuild build --flake ~/flake.nix && sudo ./result/activate` seems to work okay"（ビルドはユーザーで、アクティベートのみ root で）が報告されている。
 - **秘密情報はリポジトリに置かない**：フレークの内容は world-readable な Nix ストアにコピーされる。SSH 鍵・API トークンは別管理（sops-nix 等）。
+
+## 一部のアプリはNixで管理しない
+
+- Claude Code 最新版の更新が早くモデルが利用できない機能が使えない可能性があるため
+  - 更新の遅れを気にしての採用のため、公式インストーラを使った運用とする

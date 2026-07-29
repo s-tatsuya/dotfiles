@@ -14,6 +14,7 @@
     casks = [
       "scroll-reverser"
       "karabiner-elements"
+      "claude"
     ];
 
     # Mac App Store 製アプリを入れたい場合(任意):
