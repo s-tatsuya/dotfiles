@@ -18,4 +18,10 @@
   # 後方互換用。`darwin-rebuild changelog` を参照。
   # `nix flake init -t nix-darwin` が生成する現行値を使うのが安全。
   system.stateVersion = 6;
+
+  system.defaults.CustomUserPreferences = {
+    "com.apple.inputmethod.Kotoeri" = {
+      JIMPrefLiveConversionKey = false;
+    };
+  };
 }
