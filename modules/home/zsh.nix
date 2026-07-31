@@ -1,4 +1,4 @@
-{ ... }:
+{ pkgs, ... }:
 {
   # nix-darwin 側でも zsh を有効化しているが、home-manager 側でも
   # 有効化すると direnv などのフックが確実に挿入される。
@@ -16,6 +16,19 @@
       # ここは単独で使う想定なので不要。
       claude = "claude --permission-mode auto";
     };
+
+    # Plugin 関連の設定を追加
+    plugins = [
+      {
+        name = "zsh-completions";
+        src = pkgs.fetchFromGitHub {
+          owner = "zsh-users";
+          repo = "zsh-completions";
+          rev = "0.35.0";
+          sha256 = "sha256-GFHlZjIHUWwyeVoCpszgn4AmLPSSE8UVNfRmisnhkpg=";
+        };
+      }
+    ];
   };
 
   home.sessionPath = [
