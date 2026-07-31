@@ -7,6 +7,7 @@
     ./zsh.nix
     ./starship.nix
     ./fzf.nix
+    ./bat.nix
     ./helix.nix
   ];
 }
