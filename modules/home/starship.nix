@@ -1,6 +1,6 @@
 { ... }:
 {
-  programs.fzf = {
+  programs.starship = {
     enable = true;
     enableZshIntegration = true;
   };
