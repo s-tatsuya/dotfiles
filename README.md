@@ -41,6 +41,17 @@ curl -sSfL https://artifacts.nixos.org/nix-installer | sh -s -- install --enable
 - 最初の最小構成では **Homebrew を入れない**。過去の競合は、Nix と Homebrew が両方 PATH を奪い合ったり、両方で同じツールを入れたことに起因することが多い。
 - GUI アプリなどで Homebrew が必要になったら、`nix-homebrew`（`github:zhaofengli/nix-homebrew`）で Homebrew 本体をインストール・ピン留めし、`homebrew.casks` / `homebrew.brews` で宣言的に管理する。nix-darwin の `homebrew.enable = true` は Homebrew 本体をインストールしない点に注意（別途 nix-homebrew か手動インストールが必要）。
 
+### 6. GitHub 認証方式（SSH ではなく gh CLI に一本化）
+「HTTPS トークン / SSH 鍵 / gh CLI」は並列の選択肢ではない。**gh CLI 認証は HTTPS トークン認証そのもの**で、`gh auth login` が OAuth トークンを取得して macOS キーチェーンに保存し、`credential.helper = gh auth git-credential` を git に登録する。したがって実質の選択は SSH か HTTPS かであり、HTTPS を選ぶなら gh に任せるのが最も手数が少ない（PAT を手発行する方式は有効期限とスコープの管理が自分持ちになるだけ）。
+
+**この構成で HTTPS + gh を採る理由：**
+- **root 実行の副作用を構造的に回避できる**。Caveats に挙げた nix-darwin Issue #1471（`sudo darwin-rebuild` が root で走るため SSH 鍵が見つからない）は **SSH 固有**の摩擦。HTTPS + トークンなら `nix.settings.access-tokens` がシステム設定として効くので同じ問題が起きない。
+- **flake input の取得と相性が良い**。未認証の GitHub API は 60 req/h でレート制限され、input 解決で引っかかる。これを解消する `access-tokens` はトークン方式でしか書けず、SSH 鍵では解決できない。プライベート flake を input に入れる場合も同様。
+- **カバー範囲が広い**。SSH 鍵は git の push/pull しか賄わないが、gh は PR / Issue / Release / Actions・`gh api`・`gh extension` まで扱え、`gh auth token` で他ツールにトークンを渡せる。
+- **ネットワーク耐性**。443 は塞がれないが 22 は社内 NW や公衆 Wi-Fi で塞がれることがある。
+
+**SSH を併用する価値が出る場合**：コミット署名（`gpg.format = "ssh"` は GPG より運用が楽）、複数アカウントを `~/.ssh/config` のホスト別エイリアスで切り替えたい場合。いずれも現時点では不要なので鍵は作らない。
+
 ## Details
 
 ### 推奨ディレクトリ構成（dotfiles リポジトリ）
@@ -245,6 +256,26 @@ curl -sSfL https://artifacts.nixos.org/nix-installer | sh -s -- install --enable
 }
 ```
 
+### modules/home/gh.nix
+```nix
+{ ... }:
+{
+  programs.gh = {
+    enable = true;
+    settings.git_protocol = "https";
+  };
+}
+```
+`gitCredentialHelper.enable` は既定で `true` なので明示不要。これにより git 設定側へ次がマージされる：
+```gitconfig
+[credential "https://github.com"]
+	helper = ""
+	helper = "/nix/store/....-gh-2.96.0/bin/gh auth git-credential"
+```
+先頭の `helper = ""` が既存ヘルパー（macOS 既定の `osxkeychain`）を**該当ホストについてのみ**リセットするため、ヘルパーが二重登録されて認証情報が食い違うことはない。同じブロックが `https://gist.github.com` にも生成される。
+
+トークン自体は宣言的に管理しない（フレークの内容は world-readable な Nix ストアにコピーされるため）。マシンごとに一度 `gh auth login` を実行する。
+
 ### modules/home/zsh.nix
 ```nix
 { ... }:
@@ -304,7 +335,28 @@ home-manager --version       # programs.home-manager.enable = true; により利
 nix --version
 ```
 
-**Step 6 — 以降の運用**
+**Step 6 — GitHub 認証（マシンごとに1回）**
+トークンはリポジトリに置けないので、ここだけは手作業になる（SSH 鍵を配れないのと同じ）。
+```bash
+gh auth login                        # HTTPS → ブラウザ認証 を選択
+gh auth status
+git config --get-regexp '^credential\.'   # gh のヘルパーが登録されているか確認
+git ls-remote https://github.com/s-tatsuya/dotfiles.git >/dev/null && echo OK
+```
+
+flake input の取得で GitHub API のレート制限（未認証は 60 req/h）に当たる場合や、プライベート flake を input にする場合は access-token を設定する。トークンをフレークに直書きすると world-readable な Nix ストアに載るので、git 管理外のファイルを include する：
+```nix
+# modules/darwin/nix.nix
+nix.extraOptions = ''
+  !include /etc/nix/secret.conf
+'';
+```
+```bash
+sudo sh -c 'echo "access-tokens = github.com=$(gh auth token)" > /etc/nix/secret.conf'
+sudo chmod 600 /etc/nix/secret.conf
+```
+
+**Step 7 — 以降の運用**
 設定を変えたら：
 ```bash
 sudo darwin-rebuild switch --flake ~/dotfiles#mac
