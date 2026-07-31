@@ -4,6 +4,9 @@
   # 有効化すると direnv などのフックが確実に挿入される。
   programs.zsh = {
     enable = true;
+    enableCompletion = true;
+    autosuggestion.enable = true;
+    syntaxHighlighting.enable = true;
 
     # ~/.zshrc に `alias <name>='<value>'` として展開される。
     # 値は zsh の文字列としてそのまま渡るので、クォートは Nix 側で意識しない。
