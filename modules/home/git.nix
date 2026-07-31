@@ -4,6 +4,6 @@
     enable = true;
     settings.user.name = "S-tatsuya";
     settings.user.email = "s-tatsuya0123@gmail.com";
-    settings.core.editor = "vim";
+    settings.core.editor = "hx";
   };
 }

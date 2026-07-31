@@ -15,6 +15,7 @@
       "scroll-reverser"
       "karabiner-elements"
       "claude"
+      "visual-studio-code"
     ];
 
     # Mac App Store 製アプリを入れたい場合(任意):
