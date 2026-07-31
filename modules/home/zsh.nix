@@ -20,6 +20,7 @@
     # Plugin 関連の設定を追加
     plugins = [
       {
+        # サブコンマンドの自動補完
         name = "zsh-completions";
         src = pkgs.fetchFromGitHub {
           owner = "zsh-users";
@@ -27,6 +28,11 @@
           rev = "0.35.0";
           sha256 = "sha256-GFHlZjIHUWwyeVoCpszgn4AmLPSSE8UVNfRmisnhkpg=";
         };
+      }
+      {
+        name = "fzf-tab";
+        src = pkgs.zsh-fzf-tab;
+        file = "shre/fzf-tab/fzf-tab.plugin.zsh";
       }
     ];
   };
