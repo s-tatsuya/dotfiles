@@ -20,22 +20,21 @@
     # Plugin 関連の設定を追加
     plugins = [
       {
-        # サブコンマンドの自動補完
-        name = "zsh-completions";
-        src = pkgs.fetchFromGitHub {
-          owner = "zsh-users";
-          repo = "zsh-completions";
-          rev = "0.35.0";
-          sha256 = "sha256-GFHlZjIHUWwyeVoCpszgn4AmLPSSE8UVNfRmisnhkpg=";
-        };
-      }
-      {
+        # 補完候補を fzf で選ぶ。compinit の後に読み込まれる必要があるが、
+        # home-manager は plugins を compinit の後に source するので条件を満たす。
         name = "fzf-tab";
         src = pkgs.zsh-fzf-tab;
-        file = "shre/fzf-tab/fzf-tab.plugin.zsh";
+        file = "share/fzf-tab/fzf-tab.plugin.zsh";
       }
     ];
   };
+
+  # サブコマンドの自動補完。
+  # plugins で入れると補完関数のあるディレクトリが fpath に入るのが
+  # compinit より後になって効かないため、パッケージとして入れる。
+  # nix パッケージは share/zsh/site-functions に置かれ、こちらは
+  # home-manager が compinit より前に fpath へ追加してくれる。
+  home.packages = [ pkgs.zsh-completions ];
 
   home.sessionPath = [
     "$HOME/.local/bin"
