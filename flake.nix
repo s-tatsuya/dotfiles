@@ -14,6 +14,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # herdr（AI コーディングエージェント用のターミナルワークスペース管理）
+    # nixpkgs は follows させない: 向こうは nixos-unstable + rust-overlay 前提のため
+    herdr.url = "github:herdrdev/herdr";
+
     nix-homebrew.url = "github:zhaofengli/nix-homebrew";
     homebrew-core = {
       url = "github:homebrew/homebrew-core";
@@ -25,7 +29,7 @@
     };
   };
 
-  outputs = inputs@{ self, nixpkgs, nix-darwin, home-manager, nix-homebrew, homebrew-core, homebrew-cask }:
+  outputs = inputs@{ self, nixpkgs, nix-darwin, home-manager, herdr, nix-homebrew, homebrew-core, homebrew-cask }:
   let
     username = "s-tatsuya";
     system = "aarch64-darwin";   # M1/M2/M3 は aarch64-darwin
