@@ -423,3 +423,7 @@ sudo darwin-rebuild switch --flake ~/dotfiles#mac
   - 更新の遅れを気にしての採用のため、公式インストーラを使った運用とする
 - Naya Flow は Nix でも Homebrew でも管理されていないキーボードのキーマップ変更GUIツールのため
 - HHKB のキーマップ変更ツールも Nix でも Homebrew でも管理されていないGUIツールのため
+
+### Herdr のプラグインも Nix で管理しない
+
+- `herdr plugin install persiyanov/herdr-reviewr`: コーディングエージェントの変化点を確認しやすくするためのプラグイン
