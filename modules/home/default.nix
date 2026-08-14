@@ -9,5 +9,6 @@
     ./fzf.nix
     ./bat.nix
     ./helix.nix
+    ./ghostty.nix
   ];
 }

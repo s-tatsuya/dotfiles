@@ -12,6 +12,9 @@
     taps = [];   # taps は nix-homebrew 側で管理するのでここは空でOK
 
     casks = [
+      # ターミナル。nixpkgs の ghostty は Linux 専用なので cask で入れる。
+      # 設定は modules/home/ghostty.nix が ~/.config/ghostty/config を生成する。
+      "ghostty"
       "scroll-reverser"
       "karabiner-elements"
       "claude"
