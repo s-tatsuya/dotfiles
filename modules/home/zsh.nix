@@ -17,6 +17,17 @@
       claude = "claude --permission-mode auto";
     };
 
+    # zsh 標準の補完は大文字小文字を区別するため、`cd doc<TAB>` では
+    # `Documents` が候補に出ない。小文字入力を大文字にもマッチさせる。
+    # fzf-tab は補完システムが生成した候補を表示するだけなので、
+    # マッチ規則はこちらの zstyle で調整する必要がある。
+    initContent = ''
+      # m:{a-z}={A-Za-z} … 入力した小文字は大小どちらにもマッチする。
+      # 大文字を明示的に入力した場合は大文字のみにマッチするので、
+      # 完全な case-insensitive よりも候補が絞り込みやすい。
+      zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
+    '';
+
     # Plugin 関連の設定を追加
     plugins = [
       {
