@@ -34,6 +34,13 @@
       window-padding-x = 8;
       window-padding-y = 8;
       mouse-hide-while-typing = true;
+    }
+    // lib.optionalAttrs pkgs.stdenv.hostPlatform.isDarwin {
+      # macOS の Option キーは既定で Unicode 入力（Option + a で å など）に使われ、
+      # Esc プレフィックス付きのシーケンスが端末アプリに届かない。true にすると
+      # 左右どちらの Option も Alt として送るようになり、Helix の Alt 系キーバインドが効く。
+      # 片側だけ Unicode 入力用に残したい場合は "left" / "right" も指定できる。
+      macos-option-as-alt = true;
     };
   };
 }
