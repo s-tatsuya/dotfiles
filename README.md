@@ -5,6 +5,7 @@
 - クリーンな M1 Mac には **公式 NixOS インストーラ（Nix Installer Working Group が維持する foundation-owned fork、`artifacts.nixos.org/nix-installer` に `--enable-flakes` を付与）で上流 Nix を入れる**のが最も競合の少ない選択。上流 Nix なら nix-darwin の `nix.enable = true`（既定）のまま nix.conf を管理でき、過去に苦しんだ Determinate 起因の `nix.enable = false` 分岐を避けられる。
 - nix-darwin は初回のみ `sudo nix run nix-darwin -- switch --flake ~/dotfiles#mac` でブートストラップし、以降は `sudo darwin-rebuild switch --flake ~/dotfiles#mac`。2025年の "The Plan" Phase 1（nix-darwin Issue #1457）以降、システムアクティベーションは root 実行が必須。home-manager は nix-darwin モジュールとして統合するのが現行推奨。
 - dotfiles は `flake.nix` + `hosts/`（ホスト別）+ `modules/darwin`・`modules/home`（機能別モジュール）+ `home/<user>.nix` に分割するのがメンテしやすい。Homebrew は最初は入れず、必要になってから nix-homebrew で宣言的に管理すると Nix と競合しない。
+- **Docker は OS で実装が別物**。macOS は `modules/home/docker.nix` が **colima**（Lima + Apple Virtualization.framework の VM）と docker CLI を宣言し、ログイン時に launchd が VM を起動する。Ubuntu はカーネルがそのまま使えるので VM を挟まず、`scripts/ubuntu-bootstrap.sh` がネイティブの Docker Engine を入れる。どちらのモジュールも相手側では評価結果が空になる。
 - **Ubuntu 26.04（非 NixOS）は standalone home-manager で運用する**。システム層に相当する宣言的レイヤ（nix-darwin / NixOS モジュール）が存在しないので、ユーザー環境だけを `homeConfigurations."s-tatsuya@ubuntu"` が持ち、OS 側の下ごしらえ（Nix 本体・Docker・ログインシェル）は `scripts/ubuntu-bootstrap.sh` に閉じ込める。`modules/home` は両 OS で共有し、差分は `pkgs.stdenv.hostPlatform.isDarwin` / `isLinux` で分岐する。
 
 ## Key Findings
@@ -88,6 +89,7 @@ curl -sSfL https://artifacts.nixos.org/nix-installer | sh -s -- install --enable
 │   └── home/                 # home-manager（ユーザー）用モジュール。両 OS 共通
 │       ├── default.nix       # 集約（imports）
 │       ├── linux.nix         # 非 NixOS Linux 用の受け皿（isLinux のときだけ有効）
+│       ├── docker.nix        # macOS 専用: colima + docker CLI（isDarwin のときだけ有効）
 │       ├── packages.nix      # ユーザーパッケージ
 │       ├── git.nix           # アプリ別設定の例
 │       └── zsh.nix
@@ -524,6 +526,8 @@ home-manager switch --flake ~/dotfiles#s-tatsuya@ubuntu
 
 ### Docker（`sudo` なしで実行する）
 
+> macOS 側は事情がまったく違う（VM が要る）。「Docker（macOS：colima）」の節を参照。
+
 **Nix で管理しない。** `dockerd` はシステムの systemd サービスで、`/var/run/docker.sock` の所有権も `docker` グループの作成も root 権限が要る。NixOS なら `virtualisation.docker.enable` で宣言できるが、Ubuntu の standalone home-manager にはそれに相当するものが無い。よってブートストラップスクリプトの担当にする。
 
 インストール元は **Docker 公式 apt リポジトリ**（Ubuntu の `docker.io` ではない）。`docker compose` と `buildx` がプラグインとして付いてきて、バージョンも上流に追随するため。スクリプトは公式手順どおり、名前がぶつかるディストリ側のパッケージ（`docker.io` / `docker-compose` / `podman-docker` / `containerd` / `runc` …）を先に外し、`/etc/apt/keyrings/docker.asc` と deb822 形式の `/etc/apt/sources.list.d/docker.sources` を置いてから `docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin` を入れる。
@@ -604,6 +608,114 @@ home-manager は `launchd` も `systemd` もどちらの OS でもオプショ�
 - Ubuntu：fontconfig 経由。ただし `fonts.fontconfig.enable` の既定値は「NixOS の submodule として動いていて `useUserPackages` が有効」なときだけ true なので、standalone home-manager では **明示的に有効化しないと見つからない**。`modules/home/packages.nix` で `pkgs.stdenv.hostPlatform.isLinux` のとき true にしてある。
 
 確認は `fc-list | grep -i explex`。
+
+## Docker（macOS：colima）
+
+macOS にはコンテナを動かす Linux カーネルが無いので、Docker を使うには必ず VM が要る。ここでは **colima**（Lima のラッパー）を使い、`modules/home/docker.nix` で宣言する。Docker Desktop は GUI アプリで宣言的に設定できず、かつ一定規模の組織では有償ライセンスが要るので採用しない。
+
+### mac と Ubuntu の切り分け
+
+同じ「Docker を使う」でも、2 つの OS で必要なものが正反対になる。
+
+| | macOS | Ubuntu |
+|---|---|---|
+| dockerd の置き場 | colima が起動する Linux VM の中 | ホストのカーネル上（VM 不要） |
+| 入れ方 | `modules/home/docker.nix`（Nix / 宣言的） | `scripts/ubuntu-bootstrap.sh`（Docker 公式 apt リポジトリ） |
+| 常駐の仕組み | launchd agent（`colima start --foreground`） | systemd の `docker.service` |
+| docker CLI | `pkgs.docker`（darwin では clientOnly ビルド） | apt の `docker-ce-cli` |
+
+`modules/home/docker.nix` は `config` 全体を `lib.mkIf pkgs.stdenv.hostPlatform.isDarwin` で閉じてあるので、Ubuntu 構成から `import` しても `home.packages` にも launchd にも何も足さない。逆に Ubuntu 側の Docker は Nix の管轄外（理由は「Docker（`sudo` なしで実行する）」の節）。確認：
+
+```bash
+# Ubuntu 構成には colima も docker も入らない → [ ] が返る
+nix eval '.#homeConfigurations."s-tatsuya@ubuntu".config.home.packages' \
+  --apply 'ps: builtins.filter (n: builtins.match ".*(colima|docker).*" n != null) (map (p: p.name) ps)'
+```
+
+### パッケージは 2 つだけ
+
+- `pkgs.colima` — nixpkgs の colima は `lima-full` / `qemu` / `krunkit` を PATH に差し込むラッパーなので、`limactl` を別途入れる必要はない。
+- `pkgs.docker` — darwin では `clientOnly = !stdenv.hostPlatform.isLinux` により **CLI だけ**がビルドされる（dockerd は VM の中で colima が動かす）。`buildx` と `compose` は `libexec/docker/cli-plugins` に同梱されたうえでラッパーがそこを指すので、`docker buildx` / `docker compose` は追加パッケージ無しで動く。
+
+zsh 補完はどちらのパッケージも `share/zsh/site-functions` に置くので、`modules/home/zsh.nix` の `enableCompletion` にそのまま乗る。
+
+### ログイン時の自動起動（launchd）
+
+```nix
+launchd.agents.colima.config.ProgramArguments = [
+  "…/bin/colima" "start" "--foreground"
+  "--cpus" "4" "--memory" "8" "--disk" "100"
+  "--vm-type" "vz" "--mount-type" "virtiofs" "--vz-rosetta"
+];
+```
+
+**`--foreground` が必須**なのが分かりにくい点。`colima start` は VM を起動したら制御を返すが、実際に VM を抱えている lima の hostagent はその子プロセスとして残る。launchd は（`AbandonProcessGroup` を立てない限り）ジョブのメインプロセスが終了した時点で残りのプロセスグループを回収するので、素の `colima start` だと起動直後に VM ごと片付けられてしまう。`--foreground` は colima を SIGINT/SIGTERM 待ちで常駐させるだけの実装（`cmd/start.go` の `awaitForInterruption`）で、これによりジョブの寿命と VM の寿命が一致する。Homebrew の `brew services start colima` も同じ形を取っている。
+
+`KeepAlive.SuccessfulExit = false` は「異常終了したときだけ起こし直す」指定。`--foreground` は SIGTERM を受けると VM を畳んで exit 0 するので、明示的に止めたときに launchd が起動し直すことはない。ここを `KeepAlive = true` にすると止められなくなる。
+
+`EnvironmentVariables.PATH` に docker CLI を足しているのは、colima が VM 起動後に `docker context create colima` / `docker context use colima` を **docker コマンドを実行して**行うため（`environment/container/docker/context.go`）。launchd agent の既定 PATH は `/usr/bin:/bin:/usr/sbin:/sbin` しかなく、ここを足さないとコンテキストが作られず `docker ps` が素の `/var/run/docker.sock` を見に行って失敗する。`/usr/bin` 以下を残してあるのは colima / limactl が `sw_vers` や `ssh` を呼ぶため。
+
+ログは `~/Library/Logs/colima.log`（PlantUML サーバと同じ流儀）。
+
+### VM のスペック
+
+リテラルを plist に直書きせず、`local.colima.*` オプションとして `modules/home/docker.nix` の先頭に集約している（`local.plantuml.port` と同じ方針）。既定は M1 / 8 コア / 16GB に対して：
+
+| オプション | 既定 | 備考 |
+|---|---|---|
+| `local.colima.cpus` | 4 | |
+| `local.colima.memory` | 8 | GiB。VM に静的に確保される（ホストに 8GiB 残る） |
+| `local.colima.disk` | 100 | GiB。スパースなので実使用分しか消費しない。**あとから縮められない** |
+| `local.colima.rosetta` | true | amd64 イメージを Rosetta で実行する |
+
+値を変えるときは `hosts/mac/default.nix` などで上書きするか、既定値そのものを書き換える。`colima start` は `--save-config`（既定 true）で渡された値を `~/.colima/default/colima.yaml` に書き戻すので、**このフラグ群が唯一の正**になる。変更後は switch してから VM を起動し直せば既存 VM にも反映される（ディスクの縮小を除く）。
+
+```bash
+sudo darwin-rebuild switch --flake ~/dotfiles#mac
+launchctl kickstart -k gui/$(id -u)/org.nix-community.home.colima   # VM を作り直さず再起動
+```
+
+### Rosetta（amd64 イメージ）
+
+`--vz-rosetta` は vmType が `vz`（Apple の Virtualization.framework）のときだけ効く。**ホスト側に Rosetta 2 が入っていることが前提**で、無い場合 colima は起動を止めず警告だけ出して qemu の binfmt エミュレーションに落ちる（`environment/vm/lima/yaml.go`）。桁違いに遅いので、amd64 イメージを使うなら先に入れておく：
+
+```bash
+softwareupdate --install-rosetta --agree-to-license
+/usr/bin/pgrep -q oahd && echo "Rosetta 2 稼働中"
+```
+
+arm64 ネイティブだけで済ませるなら `local.colima.rosetta = false` にしてよい。
+
+### 使い方と確認
+
+初回の `colima start` は VM イメージのダウンロードが入るので数分かかる。ログイン時に裏で走るため、導入直後は手動で一度動かして様子を見るのが早い。
+
+```bash
+colima start            # 手動起動（launchd を待たない場合）
+colima status
+docker context ls       # colima が current（*）になっている
+docker run --rm hello-world
+docker compose version
+docker buildx version
+tail -f ~/Library/Logs/colima.log
+```
+
+止める・作り直す：
+
+```bash
+colima stop                                                   # VM だけ停止
+launchctl kill TERM gui/$(id -u)/org.nix-community.home.colima  # launchd ジョブごと止める（VM も畳まれる）
+colima delete                                                 # VM を破棄（ディスクサイズを変えたいときなど）
+```
+
+`colima stop` だけだと launchd 側の `colima --foreground` プロセスは SIGTERM を受けていないので居座る（害はないが `launchctl` 上は running のまま）。完全に止めるなら上の `launchctl kill TERM` を使う。
+
+### 注意点
+
+- **VM に見えるのはホームディレクトリだけ**。colima の既定マウントは `~` の 1 つ（書き込み可）なので、`docker run -v $HOME/work:/work` は動くが `-v /tmp/foo:/foo` や `/nix/store` のバインドマウントは VM 側に存在しない。
+- **設定ディレクトリの解決規則が環境変数依存**。colima は `COLIMA_HOME`（そのディレクトリが実在する場合のみ）→ `~/.colima`（実在する場合）→ `$XDG_CONFIG_HOME/colima` → macOS なら `~/.colima` の順で決める（`config/files.go`）。この dotfiles は macOS で `xdg.enable` を有効にしていないので `~/.colima` に落ち着く。あとから `XDG_CONFIG_HOME` を export しても `~/.colima` が既にあれば警告付きでそちらが優先されるため、パスがぶれることはない。
+- **`~/.docker/config.json` は Nix で管理しない**。colima が `docker context use` でここに書き込むので、home-manager で読み取り専用の symlink にすると起動のたびに失敗する。`docker login` の資格情報が書かれる先でもあるので可変のままにしてある。
+- **VM のメモリはホストから静的に取られる**。使わない期間が長いなら `colima stop` するか、launchd agent を無効化（`launchd.agents.colima.enable = false`）する。
 
 ## Caveats
 
