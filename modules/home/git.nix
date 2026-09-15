@@ -5,5 +5,6 @@
     settings.user.name = "S-tatsuya";
     settings.user.email = "s-tatsuya0123@gmail.com";
     settings.core.editor = "hx";
+    settings.init.defaultBranch = "main";
   };
 }
