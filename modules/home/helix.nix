@@ -69,12 +69,14 @@ in
           args = [
             "--theme" "tokyonight-storm"
             "--no-auto"
-            # PlantUML はローカルの内蔵 HTTP サーバ（plantuml.nix の launchd agent）に
-            # 向ける。既定は www.plantuml.com への外部 HTTP 呼び出しなので、UML を
-            # 含む markdown を書くたびに図のソースが外部に送られてしまう。
+            # PlantUML はローカルのレンダリングサーバ（plantuml.nix が docker
+            # compose で起動する plantuml-server コンテナ）に向ける。既定は
+            # www.plantuml.com への外部 HTTP 呼び出しなので、UML を含む markdown を
+            # 書くたびに図のソースが外部に送られてしまう。
             # --plantuml-server はホスト（host:port）だけを取り、パスは
-            # --plantuml-path（既定 "plantuml"）が持つ。内蔵サーバはその既定パスの
-            # まま応答するので path は触らない。TLS はローカルなので落とす。
+            # --plantuml-path（既定 "plantuml"）が持つ。コンテナ側は BASE_URL=plantuml
+            # で jetty のコンテキストパスをそこに合わせてあるので path は触らない。
+            # TLS はローカルなので落とす。
             "--plantuml-server" "localhost:${toString config.local.plantuml.port}"
             "--plantuml-disable-tls"
           ]
