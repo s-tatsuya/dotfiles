@@ -21,11 +21,44 @@
     # 本体が Homebrew 由来でも環境変数は Ghostty 側が設定するので機能する。
     enableZshIntegration = true;
 
+    # ~/.config/ghostty/themes/<name> を生成する。組み込みテーマに osaka-jade は無いので
+    # 自前で置く。元ネタは omarchy の osaka-jade テーマ。
+    # https://github.com/Justikun/omarchy-osaka-jade-theme
+    themes.osaka-jade = {
+      background = "#111c18";
+      foreground = "#C1C497";
+      cursor-color = "#D7C995";
+      cursor-text = "#000000";
+
+      palette = [
+        # normal
+        "0=#23372B"
+        "1=#FF5345"
+        "2=#549e6a"
+        "3=#459451"
+        "4=#509475"
+        "5=#D2689C"
+        "6=#2DD5B7"
+        "7=#F6F5DD"
+
+        # bright
+        "8=#53685B"
+        "9=#db9f9c"
+        "10=#63b07a"
+        "11=#E5C736"
+        "12=#ACD4CF"
+        "13=#75bbb3"
+        "14=#8CD3CB"
+        "15=#9eebb3"
+      ];
+    };
+
     # ~/.config/ghostty/config を生成する。Linux はもちろん、macOS の Ghostty も
     # XDG のパスを読むので、設定ファイルは両 OS で 1 本に統一できる。
     settings = {
-      # 名前は `ghostty +list-themes` の表記どおり。helix の tokyonight_storm に合わせている。
-      theme = "TokyoNight Storm";
+      # 下の themes で定義した自前のテーマ。`ghostty +list-themes` に出る組み込みテーマと
+      # 同じ名前空間なので、ファイル名（= themes の属性名）をそのまま書けばよい。
+      theme = "osaka-jade";
 
       # フォント本体（explex-nf）は modules/home/packages.nix で入れている。
       # 名前は `ghostty +list-fonts` の表記どおり。Bold / Italic は同じファミリ内から
