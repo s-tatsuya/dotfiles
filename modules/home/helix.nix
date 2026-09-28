@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ pkgs, ... }:
 let
   # prettier はパーサを明示しないと stdin の言語を判別できない。
   # `with pkgs` 下の pkgs.prettier を隠さないよう別名にしている。
@@ -387,17 +387,6 @@ in
             "--theme"
             "everforest-dark"
             "--no-auto"
-            # PlantUML はローカルのレンダリングサーバ（plantuml.nix が docker
-            # compose で起動する plantuml-server コンテナ）に向ける。既定は
-            # www.plantuml.com への外部 HTTP 呼び出しなので、UML を含む markdown を
-            # 書くたびに図のソースが外部に送られてしまう。
-            # --plantuml-server はホスト（host:port）だけを取り、パスは
-            # --plantuml-path（既定 "plantuml"）が持つ。コンテナ側は BASE_URL=plantuml
-            # で jetty のコンテキストパスをそこに合わせてあるので path は触らない。
-            # TLS はローカルなので落とす。
-            "--plantuml-server"
-            "localhost:${toString config.local.plantuml.port}"
-            "--plantuml-disable-tls"
           ]
           # macOS では `open -a <browser>` に渡されるのでアプリ名で指定する。
           # Linux では xdg-open（既定のブラウザ）に任せる。
