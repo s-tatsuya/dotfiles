@@ -5,7 +5,7 @@
 - クリーンな M1 Mac には **公式 NixOS インストーラ（Nix Installer Working Group が維持する foundation-owned fork、`artifacts.nixos.org/nix-installer` に `--enable-flakes` を付与）で上流 Nix を入れる**のが最も競合の少ない選択。上流 Nix なら nix-darwin の `nix.enable = true`（既定）のまま nix.conf を管理でき、過去に苦しんだ Determinate 起因の `nix.enable = false` 分岐を避けられる。
 - nix-darwin は初回のみ `sudo nix run nix-darwin -- switch --flake ~/dotfiles#mac` でブートストラップし、以降は `sudo darwin-rebuild switch --flake ~/dotfiles#mac`。2025年の "The Plan" Phase 1（nix-darwin Issue #1457）以降、システムアクティベーションは root 実行が必須。home-manager は nix-darwin モジュールとして統合するのが現行推奨。
 - dotfiles は `flake.nix` + `hosts/`（ホスト別）+ `modules/darwin`・`modules/home`（機能別モジュール）+ `home/<user>.nix` に分割するのがメンテしやすい。Homebrew は最初は入れず、必要になってから nix-homebrew で宣言的に管理すると Nix と競合しない。
-- **Docker は OS で実装が別物**。macOS は `modules/home/docker.nix` が **colima**（Lima + Apple Virtualization.framework の VM）と docker CLI を宣言する。VM は常駐させず、使うときだけ `colima-up` で起動する。Ubuntu はカーネルがそのまま使えるので VM を挟まず、`scripts/ubuntu-bootstrap.sh` がネイティブの Docker Engine を入れる。どちらのモジュールも相手側では評価結果が空になる。PlantUML のレンダリングサーバもこれに乗せ替え、両 OS とも docker compose（`restart: unless-stopped`）で起動する。
+- **Docker は OS で実装が別物**。macOS は `modules/home/docker.nix` が **colima**（Lima + Apple Virtualization.framework の VM）と docker CLI を宣言し、ログイン時に launchd が VM を起動する。Ubuntu はカーネルがそのまま使えるので VM を挟まず、`scripts/ubuntu-bootstrap.sh` がネイティブの Docker Engine を入れる。どちらのモジュールも相手側では評価結果が空になる。PlantUML のレンダリングサーバもこれに乗せ替え、両 OS とも docker compose（`restart: unless-stopped`）で起動する。
 - **Ubuntu 26.04（非 NixOS）は standalone home-manager で運用する**。システム層に相当する宣言的レイヤ（nix-darwin / NixOS モジュール）が存在しないので、ユーザー環境だけを `homeConfigurations."s-tatsuya@ubuntu"` が持ち、OS 側の下ごしらえ（Nix 本体・Docker・ログインシェル）は `scripts/ubuntu-bootstrap.sh` に閉じ込める。`modules/home` は両 OS で共有し、差分は `pkgs.stdenv.hostPlatform.isDarwin` / `isLinux` で分岐する。
 
 ## Key Findings
@@ -107,7 +107,7 @@ curl -sSfL https://artifacts.nixos.org/nix-installer | sh -s -- install --enable
 
 1. **モジュールまるごと片方だけ**：ファイルの先頭で `lib.mkIf pkgs.stdenv.hostPlatform.isLinux { ... }` と包む（`modules/home/linux.nix`）。
 2. **一部の属性だけ足す**：`// lib.optionalAttrs pkgs.stdenv.hostPlatform.isDarwin { ... }`（`ghostty.nix` の `macos-option-as-alt`）。
-3. **同じ目的を別の仕組みで実現する**：両方書いて片方を `mkIf` で消す（例：常駐プロセスを `launchd.agents` と `systemd.user.services` の両方に書く）。`launchd` / `systemd` のオプション自体は home-manager がどちらの OS でも宣言しているので、`mkIf` で false 側に倒せば評価は通り、生成物にも現れない。
+3. **同じ目的を別の仕組みで実現する**：両方書いて片方を `mkIf` で消す（`plantuml.nix` の `launchd.agents` と `systemd.user.services`）。`launchd` / `systemd` のオプション自体は home-manager がどちらの OS でも宣言しているので、`mkIf` で false 側に倒せば評価は通り、生成物にも現れない。
 
 パスの分岐（`/Users` と `/home`）は `home/s-tatsuya.nix` の 1 箇所に閉じ込めてあるので、`hosts/*` 側では意識しなくてよい。
 
@@ -625,21 +625,21 @@ services:
 
 自動起動を担っているのは launchd でも systemd でもなく、**`restart: unless-stopped`** である。docker daemon は起動時に、このポリシーが付いたコンテナを自分で起こし直す。つまり：
 
-- macOS：colima の VM が立ち上がった時点（= `colima-up` を叩いたとき。ログイン時には起動しない）
+- macOS：colima の VM が立ち上がった時点（= ログイン時、`org.nix-community.home.colima` の launchd agent 経由）
 - Ubuntu：`docker.service` が起動した時点（= **ログイン前、ブート時**）
 
 `always` ではなく `unless-stopped` にしてあるので、`docker compose down` や `docker stop plantuml-server` で明示的に止めたときは復帰しない。
 
-#### compose を当てるのはワンショット
+#### launchd / systemd 側はワンショット
 
-それとは別に、`docker compose up -d` を 1 回だけ叩く処理を置いてある。コンテナがまだ無いとき（クリーンな環境、`down` した後）に作り、compose ファイルが変わっていれば作り直すためで、**switch 後の反映もこれで足りる**。
+それとは別に、ログイン時に `docker compose up -d` を 1 回だけ叩くジョブを置いてある。コンテナがまだ無いとき（クリーンな環境、`down` した後）に作り、compose ファイルが変わっていれば作り直すためで、**switch 後の反映もこれで足りる**。
 
-- macOS：`colima-up` の起動後フック（`local.colima.postStart`）。VM が上がった直後に流れる。ログイン時の launchd ジョブにしないのは、VM が居ないので 180 秒待って失敗するだけになるため
-- Ubuntu：`systemd.user.services.plantuml-server`（ログイン時。`Type=oneshot` + `RemainAfterExit`、ログは `journalctl --user -u plantuml-server`）
+- macOS：`launchd.agents.plantuml-server`（ログは `~/Library/Logs/plantuml-server.log`）
+- Ubuntu：`systemd.user.services.plantuml-server`（`Type=oneshot` + `RemainAfterExit`、ログは `journalctl --user -u plantuml-server`）
 
-プロセスを抱え続けるのは docker daemon なので、処理自体は即座に終了してよく、`KeepAlive` / `Restart` は要らない。
+プロセスを抱え続けるのは docker daemon なので、ジョブ自体は即座に終了してよく、`KeepAlive` / `Restart` は要らない（colima の agent が `--foreground` を必要としたのとは事情が逆）。
 
-起動スクリプトは **docker daemon が応答するまで最大 180 秒待つ**。Ubuntu ではログイン直後に `docker.service` がまだ応答しないことがあるため。ここで失敗してもコンテナ自体は restart ポリシーで復帰するので致命的ではない。
+起動スクリプトは **docker daemon が応答するまで最大 180 秒待つ**。launchd は agent 間の順序関係を持たないので、macOS ではログイン直後に必ず colima の VM 起動待ちが発生するため。ここで失敗してもコンテナ自体は restart ポリシーで復帰するので致命的ではない。
 
 OS 差は docker CLI の在り処だけ：
 
@@ -647,7 +647,7 @@ OS 差は docker CLI の在り処だけ：
 dockerBin = if isDarwin then "${pkgs.docker}/bin/docker" else "/usr/bin/docker";
 ```
 
-macOS は `modules/home/docker.nix` が入れる Nix の docker、Ubuntu は `scripts/ubuntu-bootstrap.sh` が入れる apt の `docker-ce-cli`。PATH に頼らず絶対パスで書く（systemd の PATH は痩せている）。
+macOS は `modules/home/docker.nix` が入れる Nix の docker、Ubuntu は `scripts/ubuntu-bootstrap.sh` が入れる apt の `docker-ce-cli`。launchd / systemd から起動されるスクリプトは PATH が痩せているので絶対パスで書く。
 
 #### 確認と操作
 
@@ -665,7 +665,7 @@ docker compose -f ~/.config/plantuml/compose.yaml pull                   # イ�
 #### 引き換えに失ったもの
 
 - **`plantuml` CLI が無くなった**。`home.packages` から `pkgs.plantuml` を外したので（ホストに JDK を置かないのが今回の主眼）、ファイルを直接レンダリングする用途は無い。要るなら `modules/home/plantuml.nix` の `home.packages` に戻すだけでよい。
-- **macOS では colima に依存する**。`colima-up` する前や `colima stop` 中は markdown プレビューの UML が出ない。ホスト常駐の JVM だったころに比べ、メモリ総量も VM のぶん増えている（コンテナ内の JVM + VM のオーバーヘッド）。両 OS で構成が揃うことと、ホストから JDK を追い出せることとの引き換え。
+- **macOS では colima に依存する**。`colima stop` 中は markdown プレビューの UML が出ない。ホスト常駐の JVM だったころに比べ、メモリ総量も VM のぶん増えている（コンテナ内の JVM + VM のオーバーヘッド）。両 OS で構成が揃うことと、ホストから JDK を追い出せることとの引き換え。
 - **イメージの版は `flake.lock` の管轄外**。`plantuml/plantuml-server:jetty` は可変タグなので、`docker compose pull` を叩いたときに中身が変わる。再現性を固めたいなら `image` に `@sha256:...` を付けて固定する（現行のダイジェストは `modules/home/plantuml.nix` のコメントに控えてある）。
 
 ### フォント
@@ -689,10 +689,10 @@ macOS にはコンテナを動かす Linux カーネルが無いので、Docker 
 |---|---|---|
 | dockerd の置き場 | colima が起動する Linux VM の中 | ホストのカーネル上（VM 不要） |
 | 入れ方 | `modules/home/docker.nix`（Nix / 宣言的） | `scripts/ubuntu-bootstrap.sh`（Docker 公式 apt リポジトリ） |
-| 起動の仕組み | 手動（`colima-up`）。常駐させない | systemd の `docker.service` |
+| 常駐の仕組み | launchd agent（`colima start --foreground`） | systemd の `docker.service` |
 | docker CLI | `pkgs.docker`（darwin では clientOnly ビルド） | apt の `docker-ce-cli` |
 
-`modules/home/docker.nix` は `config` 全体を `lib.mkIf pkgs.stdenv.hostPlatform.isDarwin` で閉じてあるので、Ubuntu 構成から `import` しても `home.packages` に何も足さない。逆に Ubuntu 側の Docker は Nix の管轄外（理由は「Docker（`sudo` なしで実行する）」の節）。確認：
+`modules/home/docker.nix` は `config` 全体を `lib.mkIf pkgs.stdenv.hostPlatform.isDarwin` で閉じてあるので、Ubuntu 構成から `import` しても `home.packages` にも launchd にも何も足さない。逆に Ubuntu 側の Docker は Nix の管轄外（理由は「Docker（`sudo` なしで実行する）」の節）。確認：
 
 ```bash
 # Ubuntu 構成には colima も docker も入らない → [ ] が返る
@@ -700,37 +700,34 @@ nix eval '.#homeConfigurations."s-tatsuya@ubuntu".config.home.packages' \
   --apply 'ps: builtins.filter (n: builtins.match ".*(colima|docker).*" n != null) (map (p: p.name) ps)'
 ```
 
-### パッケージ
+### パッケージは 2 つだけ
 
 - `pkgs.colima` — nixpkgs の colima は `lima-full` / `qemu` / `krunkit` を PATH に差し込むラッパーなので、`limactl` を別途入れる必要はない。
 - `pkgs.docker` — darwin では `clientOnly = !stdenv.hostPlatform.isLinux` により **CLI だけ**がビルドされる（dockerd は VM の中で colima が動かす）。`buildx` と `compose` は `libexec/docker/cli-plugins` に同梱されたうえでラッパーがそこを指すので、`docker buildx` / `docker compose` は追加パッケージ無しで動く。
-- `colima-up` — 下記の起動ラッパー（`writeShellScriptBin`）。
 
 zsh 補完はどちらのパッケージも `share/zsh/site-functions` に置くので、`modules/home/zsh.nix` の `enableCompletion` にそのまま乗る。
 
-### 使うときだけ起動する（`colima-up`）
+### ログイン時の自動起動（launchd）
 
-以前はログイン時に launchd agent（`colima start --foreground`）で VM を常駐させていたが、やめた。vz の VM が一度使ったメモリはホストに返らず、中の Linux がページキャッシュで割り当てを埋めきるので、Docker を使わない日も割り当て分を抱え続けることになるため。今は必要なときに叩く：
-
-```bash
-colima-up     # VM を起動し、起動後フック（PlantUML の compose up など）を流す
-colima stop   # 使い終わったら止める
+```nix
+launchd.agents.colima.config.ProgramArguments = [
+  "…/bin/colima" "start" "--foreground"
+  "--cpus" "4" "--memory" "4" "--disk" "100"
+  "--vm-type" "vz" "--mount-type" "virtiofs" "--vz-rosetta"
+];
 ```
 
-`colima-up` の中身はこれだけ（`local.colima.*` から組み立てられる）：
+**`--foreground` が必須**なのが分かりにくい点。`colima start` は VM を起動したら制御を返すが、実際に VM を抱えている lima の hostagent はその子プロセスとして残る。launchd は（`AbandonProcessGroup` を立てない限り）ジョブのメインプロセスが終了した時点で残りのプロセスグループを回収するので、素の `colima start` だと起動直後に VM ごと片付けられてしまう。`--foreground` は colima を SIGINT/SIGTERM 待ちで常駐させるだけの実装（`cmd/start.go` の `awaitForInterruption`）で、これによりジョブの寿命と VM の寿命が一致する。Homebrew の `brew services start colima` も同じ形を取っている。
 
-```bash
-colima start --cpus 4 --memory 4 --disk 100 --vm-type vz --mount-type virtiofs --vz-rosetta
-<local.colima.postStart の各スクリプト>
-```
+`KeepAlive.SuccessfulExit = false` は「異常終了したときだけ起こし直す」指定。`--foreground` は SIGTERM を受けると VM を畳んで exit 0 するので、明示的に止めたときに launchd が起動し直すことはない。ここを `KeepAlive = true` にすると止められなくなる。
 
-素の `colima start` でも前回保存したスペックで起動はするが、**スペックを変えたときと起動後フックを流したいときはこちら**を使う。対話シェルから叩くので、launchd 時代に必要だった `--foreground` や PATH の補正は要らない（`colima start` は VM を起動したら制御を返し、lima の hostagent はデーモンとして残る）。
+`EnvironmentVariables.PATH` に docker CLI を足しているのは、colima が VM 起動後に `docker context create colima` / `docker context use colima` を **docker コマンドを実行して**行うため（`environment/container/docker/context.go`）。launchd agent の既定 PATH は `/usr/bin:/bin:/usr/sbin:/sbin` しかなく、ここを足さないとコンテキストが作られず `docker ps` が素の `/var/run/docker.sock` を見に行って失敗する。`/usr/bin` 以下を残してあるのは colima / limactl が `sw_vers` や `ssh` を呼ぶため。
 
-`local.colima.postStart` は Docker に乗るサービスが起動処理を足すためのオプション（`types.listOf path`）。今は `modules/home/plantuml.nix` が `docker compose up -d` のスクリプトを入れている。
+ログは `~/Library/Logs/colima.log`（PlantUML サーバと同じ流儀）。
 
 ### VM のスペック
 
-リテラルをスクリプトに直書きせず、`local.colima.*` オプションとして `modules/home/docker.nix` の先頭に集約している（`local.plantuml.port` と同じ方針）。既定は M1 / 8 コア / 16GB に対して：
+リテラルを plist に直書きせず、`local.colima.*` オプションとして `modules/home/docker.nix` の先頭に集約している（`local.plantuml.port` と同じ方針）。既定は M1 / 8 コア / 16GB に対して：
 
 | オプション | 既定 | 備考 |
 |---|---|---|
@@ -743,7 +740,7 @@ colima start --cpus 4 --memory 4 --disk 100 --vm-type vz --mount-type virtiofs -
 
 ```bash
 sudo darwin-rebuild switch --flake ~/dotfiles#mac
-colima stop && colima-up   # VM を作り直さず新しいスペックで再起動
+launchctl kickstart -k gui/$(id -u)/org.nix-community.home.colima   # VM を作り直さず再起動
 ```
 
 ### Rosetta（amd64 イメージ）
@@ -759,31 +756,35 @@ arm64 ネイティブだけで済ませるなら `local.colima.rosetta = false` 
 
 ### 使い方と確認
 
-初回の `colima-up` は VM イメージのダウンロードが入るので数分かかる。
+初回の `colima start` は VM イメージのダウンロードが入るので数分かかる。ログイン時に裏で走るため、導入直後は手動で一度動かして様子を見るのが早い。
 
 ```bash
-colima-up
+colima start            # 手動起動（launchd を待たない場合）
 colima status
 docker context ls       # colima が current（*）になっている
 docker run --rm hello-world
 docker compose version
 docker buildx version
+tail -f ~/Library/Logs/colima.log
 ```
 
 止める・作り直す：
 
 ```bash
-colima stop     # VM を停止（メモリがホストに戻る）
-colima delete   # VM を破棄（ディスクサイズを変えたいときなど）
+colima stop                                                   # VM だけ停止
+launchctl kill TERM gui/$(id -u)/org.nix-community.home.colima  # launchd ジョブごと止める（VM も畳まれる）
+colima delete                                                 # VM を破棄（ディスクサイズを変えたいときなど）
 ```
+
+`colima stop` だけだと launchd 側の `colima --foreground` プロセスは SIGTERM を受けていないので居座る（害はないが `launchctl` 上は running のまま）。完全に止めるなら上の `launchctl kill TERM` を使う。
 
 ### 注意点
 
 - **VM に見えるのはホームディレクトリだけ**。colima の既定マウントは `~` の 1 つ（書き込み可）なので、`docker run -v $HOME/work:/work` は動くが `-v /tmp/foo:/foo` や `/nix/store` のバインドマウントは VM 側に存在しない。
 - **設定ディレクトリの解決規則が環境変数依存**。colima は `COLIMA_HOME`（そのディレクトリが実在する場合のみ）→ `~/.colima`（実在する場合）→ `$XDG_CONFIG_HOME/colima` → macOS なら `~/.colima` の順で決める（`config/files.go`）。この dotfiles は macOS で `xdg.enable` を有効にしていないので `~/.colima` に落ち着く。あとから `XDG_CONFIG_HOME` を export しても `~/.colima` が既にあれば警告付きでそちらが優先されるため、パスがぶれることはない。
 - **`~/.docker/config.json` は Nix で管理しない**。colima が `docker context use` でここに書き込むので、home-manager で読み取り専用の symlink にすると起動のたびに失敗する。`docker login` の資格情報が書かれる先でもあるので可変のままにしてある。
-- **VM のメモリはホストから静的に取られる**。使い終わったら `colima stop` する。止めればメモリはホストに戻る。
-- **PlantUML サーバが colima にぶら下がる**。`modules/home/plantuml.nix` のコンテナは colima の VM の中で動くので、`colima-up` する前や `colima stop` 中は Helix の markdown プレビューで UML が出ない（詳細は「PlantUML サーバ（docker compose）」の節）。
+- **VM のメモリはホストから静的に取られる**。使わない期間が長いなら `colima stop` するか、launchd agent を無効化（`launchd.agents.colima.enable = false`）する。
+- **PlantUML サーバが colima にぶら下がる**。`modules/home/plantuml.nix` のコンテナは colima の VM の中で動くので、`colima stop` 中は Helix の markdown プレビューで UML が出ない（詳細は「PlantUML サーバ（docker compose）」の節）。
 
 ## Caveats
 

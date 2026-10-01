@@ -5,7 +5,7 @@ let
   # docker CLI の在り処は OS で違う。ここが mac / Ubuntu の唯一の実質的な差分。
   #   macOS : modules/home/docker.nix が入れる Nix の docker（colima の VM に繋がる）。
   #   Ubuntu: scripts/ubuntu-bootstrap.sh が入れる apt の docker-ce-cli。
-  # colima-up / systemd から起動されるスクリプトなので、PATH に頼らず絶対パスで書く。
+  # launchd / systemd から起動されるスクリプトは PATH が痩せているので絶対パスで書く。
   dockerBin = if isDarwin then "${pkgs.docker}/bin/docker" else "/usr/bin/docker";
 
   composeFile = "${config.xdg.configHome}/plantuml/compose.yaml";
@@ -53,9 +53,9 @@ let
   startScript = pkgs.writeShellScript "plantuml-server-up" ''
     set -eu
 
-    # docker daemon が応答するまで待つ。Ubuntu ではログイン直後に docker.service が
-    # まだ立ち上がっていないことがある。macOS は colima-up が VM の起動を待ってから
-    # 呼ぶので、通常は 1 回目で通る。
+    # docker daemon が応答するまで待つ。macOS では colima の VM 起動（初回は
+    # イメージのダウンロードを含む）に時間がかかるうえ、launchd は agent 間の
+    # 順序関係を持たないので、ログイン直後はここで必ず待たされる。
     # 3 分待って駄目なら諦める。コンテナ自体は restart ポリシーで
     # daemon 側が起こし直すので、ここで失敗しても致命的ではない。
     i=0
@@ -87,18 +87,23 @@ in
     # 叩けるよう、Nix ストア直リンクではなく分かる場所に出しておく。
     xdg.configFile."plantuml/compose.yaml".source = composeSource;
 
-    # 起動の入口は OS ごとに別物なので、同じスクリプトを 2 通りに登録する。
+    # 常駐の入口は OS ごとに別物なので、同じスクリプトを 2 通りに登録する。
     # ただし以前の「JVM を常駐させる」構成と違い、ここで登録するのは
     # `docker compose up -d` を 1 回叩くだけのワンショット。
-    # プロセスを抱え続けるのは docker daemon 側なので、colima-up / systemd の
+    # プロセスを抱え続けるのは docker daemon 側なので、launchd / systemd の
     # ジョブは即座に終了してよく、KeepAlive や Restart は要らない。
     #
-    # macOS: colima の VM は常駐させず `colima-up` で起こす（docker.nix）ので、
-    #   ログイン時に走らせても daemon が居らず 180 秒待って失敗するだけになる。
-    #   代わりに colima-up の起動後フックに載せる。2 回目以降の起動ではコンテナは
-    #   restart ポリシーで既に戻っているので、ここは compose ファイルの変更を
-    #   当てるだけの冪等な処理になる。
-    local.colima.postStart = lib.mkIf isDarwin [ startScript ];
+    # macOS: launchd。home-manager の launchd.enable は非 darwin では既定 false で、
+    #   agents を定義しても plist が生成されず黙って無視される。
+    launchd.agents.plantuml-server = lib.mkIf isDarwin {
+      enable = true;
+      config = {
+        ProgramArguments = [ "${startScript}" ];
+        RunAtLoad = true;
+        StandardOutPath = "${config.home.homeDirectory}/Library/Logs/plantuml-server.log";
+        StandardErrorPath = "${config.home.homeDirectory}/Library/Logs/plantuml-server.log";
+      };
+    };
 
     # Linux: systemd --user。Ubuntu は systemd が PID 1 なのでそのまま使える。
     #   ログイン時に 1 回走る。RemainAfterExit でユニットを active のまま保ち、
