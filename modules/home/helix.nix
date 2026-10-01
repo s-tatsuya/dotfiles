@@ -52,12 +52,8 @@ in
         mouse = false;
         bufferline = "multiple";
         cursor-shape.insert = "bar";
+        inline-diagnostics.cursor-line = "hint";
       };
-
-      keys.normal.esc = [
-        "collapse_selection"
-        "keep_primary_selection"
-      ];
 
       # markdown のプレビューをブラウザで開く（mpls の workspace command）。
       # mpls の README は C-m を例示しているが、端末では C-m = Enter なので使わない。
