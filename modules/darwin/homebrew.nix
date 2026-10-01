@@ -1,4 +1,4 @@
-{ ... }:
+{ config, ... }:
 {
   homebrew = {
     enable = true;
@@ -9,7 +9,10 @@
       cleanup = "zap";   # 設定にないものは削除(Nixっぽく宣言的に保つ)
     };
 
-    taps = [];   # taps は nix-homebrew 側で管理するのでここは空でOK
+    # taps の実体は nix-homebrew が管理する。ただし brew bundle に tap 名を渡さないと
+    # cleanup が「Brewfile にない tap」とみなして untap しようとし、インストール済み cask
+    # があるため "Refusing to untap homebrew/cask" で失敗する。nix-homebrew 側の定義から渡す。
+    taps = builtins.attrNames config.nix-homebrew.taps;
 
     casks = [
       # ターミナル。nixpkgs の ghostty は Linux 専用なので cask で入れる。
