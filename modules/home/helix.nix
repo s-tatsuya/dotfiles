@@ -50,7 +50,7 @@ in
       editor = {
         line-number = "relative";
         mouse = false;
-        bufferline = "multiple";
+        bufferline = "never";
         cursor-shape.insert = "bar";
         inline-diagnostics.cursor-line = "hint";
       };
