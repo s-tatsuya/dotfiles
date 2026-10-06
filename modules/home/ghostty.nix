@@ -78,6 +78,15 @@
       # 左右どちらの Option も Alt として送るようになり、Helix の Alt 系キーバインドが効く。
       # 片側だけ Unicode 入力用に残したい場合は "left" / "right" も指定できる。
       macos-option-as-alt = true;
+
+      # JIS キーボードの ¥ キーを \ にする。Ghostty は IME 確定前のキー入力をキーボード
+      # レイアウトから直接文字に変換するため、ことえりの「¥キーで入力する文字」設定
+      # （modules/darwin/system.nix）が効かない。また Option + ¥ も上の設定で Alt + ¥ に
+      # なり \ にならない。どちらも \ を送るよう明示する（text: は Zig 文字列なので \\）。
+      keybind = [
+        "intl_yen=text:\\\\"
+        "alt+intl_yen=text:\\\\"
+      ];
     };
   };
 }
