@@ -9,6 +9,78 @@ let
       parser
     ];
   };
+
+  isDarwin = pkgs.stdenv.hostPlatform.isDarwin;
+
+  # クリップボードの画像を、編集中のファイルと同じ階層の images/ に JPEG で保存し、
+  # markdown の画像リンクを stdout に出す。space+i から :insert-output で呼ぶので、
+  # stdout がそのままカーソル位置に挿入される（末尾に改行を付けないこと）。
+  # 失敗時は非 0 で抜ければ helix が stderr を表示し、何も挿入しない。
+  pasteImage = pkgs.writeShellApplication {
+    name = "hx-paste-image";
+    runtimeInputs =
+      with pkgs;
+      [
+        coreutils
+        imagemagick
+      ]
+      # クリップボードから画像を取り出す手段は OS で別物。
+      #   macOS : pngpaste（NSPasteboard の画像を PNG に変換して出す）
+      #   Ubuntu: Wayland なら wl-paste、X11 なら xclip
+      ++ (if isDarwin then [ pngpaste ] else [ wl-clipboard xclip ]);
+    text = ''
+      buffer="''${1:-}"
+      if [ -z "$buffer" ] || [ "$buffer" = "[scratch]" ]; then
+        echo "ファイルを保存してから実行してください" >&2
+        exit 1
+      fi
+
+      dir="$(dirname -- "$buffer")/images"
+      name="$(date +%Y%m%d-%H%M%S)"
+      # 同じ秒に 2 回貼った場合に上書きしないよう連番を付ける。
+      file="$name.jpg"
+      i=1
+      while [ -e "$dir/$file" ]; do
+        file="$name-$i.jpg"
+        i=$((i + 1))
+      done
+
+      tmp="$(mktemp)"
+      trap 'rm -f "$tmp"' EXIT
+
+      ${
+        if isDarwin then
+          ''
+            if ! pngpaste - >"$tmp" 2>/dev/null; then
+              echo "クリップボードに画像がありません" >&2
+              exit 1
+            fi
+          ''
+        else
+          ''
+            # クリップボードの型は貼り元次第（image/png とは限らない）なので、
+            # 提供されている image/* の先頭を取る。ImageMagick 側は中身から形式を判別する。
+            if [ -n "''${WAYLAND_DISPLAY:-}" ]; then
+              type="$(wl-paste --list-types 2>/dev/null | grep -m1 '^image/' || true)"
+              [ -n "$type" ] && wl-paste --type "$type" >"$tmp"
+            else
+              type="$(xclip -selection clipboard -t TARGETS -o 2>/dev/null | grep -m1 '^image/' || true)"
+              [ -n "$type" ] && xclip -selection clipboard -t "$type" -o >"$tmp"
+            fi
+            if [ -z "$type" ]; then
+              echo "クリップボードに画像がありません" >&2
+              exit 1
+            fi
+          ''
+      }
+
+      mkdir -p -- "$dir"
+      # JPEG は透過を持てないので、スクリーンショットの透明部分は白で埋める。
+      magick "$tmp" -background white -alpha remove -alpha off -quality 90 "$dir/$file"
+
+      printf '![](./images/%s)' "$file"
+    '';
+  };
 in
 {
   programs.helix = {
@@ -58,6 +130,11 @@ in
       # markdown のプレビューをブラウザで開く（mpls の workspace command）。
       # mpls の README は C-m を例示しているが、端末では C-m = Enter なので使わない。
       keys.normal.space.m = ":lsp-workspace-command open-preview";
+
+      # クリップボードの画像を images/ に保存してカーソル位置にリンクを挿入する。
+      # %{buffer_name} は helix の cwd からの相対パス（cwd 外なら絶対パス）で、
+      # シェルも同じ cwd で走るのでそのまま渡せる。
+      keys.normal.space.i = '':insert-output ${pasteImage}/bin/hx-paste-image "%{buffer_name}"'';
     };
 
     # ~/.config/helix/themes/osaka_jade.toml を生成する。
