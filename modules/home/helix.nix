@@ -27,7 +27,15 @@ let
       # クリップボードから画像を取り出す手段は OS で別物。
       #   macOS : pngpaste（NSPasteboard の画像を PNG に変換して出す）
       #   Ubuntu: Wayland なら wl-paste、X11 なら xclip
-      ++ (if isDarwin then [ pngpaste ] else [ wl-clipboard xclip ]);
+      ++ (
+        if isDarwin then
+          [ pngpaste ]
+        else
+          [
+            wl-clipboard
+            xclip
+          ]
+      );
     text = ''
       buffer="''${1:-}"
       if [ -z "$buffer" ] || [ "$buffer" = "[scratch]" ]; then
