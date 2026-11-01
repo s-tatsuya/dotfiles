@@ -27,6 +27,7 @@ in
 
       # 下の themes で定義した端末テーマ。
       "term:theme" = "osaka-jade";
+      "term:fontsize" = 14;
       "term:fontfamily" = "Explex Console NF";
 
       # ウィンドウ全体の地の色（タブバーやブロックの隙間に見える部分）。
