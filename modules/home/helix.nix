@@ -89,6 +89,55 @@ let
       printf '![](./images/%s)' "$file"
     '';
   };
+
+  # mpls のプレビューを、Wave Terminal の中で hx を動かしているときは Wave の
+  # web ブロックで開き、それ以外（Ghostty など）では従来どおりブラウザで開く。
+  #
+  # mpls 自身にはその切り替え手段が無い。macOS では `open -g -a <browser> <url>` を
+  # 固定で叩き、--browser はアプリ名として -a に渡されるだけ
+  # （internal/previewserver の Openbrowser）。Linux では --browser の値を
+  # そのままコマンドとして `<browser> <url>` で実行する。
+  #
+  # 判定は WAVETERM_JWT の有無で行う。Wave の端末が子プロセスに渡す認証トークンで、
+  # wsh はこれを使って Wave 本体に繋ぐので、あれば `wsh web open` が今のタブに
+  # web ブロックを足せる。hx → mpls → このスクリプトと環境変数はそのまま継承される。
+  mplsOpen = pkgs.writeShellScript "mpls-open" ''
+    url="''${!#}" # どちらの OS でも最後の引数が URL
+
+    if [ -n "''${WAVETERM_JWT:-}" ]; then
+      # wsh は Wave が自分の端末の PATH に足すが、念のため既定の置き場も見る。
+      wsh="$(command -v wsh || true)"
+      if [ -z "$wsh" ] && [ -x "$HOME/Library/Application Support/waveterm/bin/wsh" ]; then
+        wsh="$HOME/Library/Application Support/waveterm/bin/wsh"
+      fi
+      if [ -n "$wsh" ]; then
+        exec "$wsh" web open "$url"
+      fi
+    fi
+
+    ${
+      if isDarwin then
+        # mpls が組み立てた引数（-g -a Safari <url>）を本物の open にそのまま渡す。
+        ''exec /usr/bin/open "$@"''
+      else
+        ''exec ${pkgs.xdg-utils}/bin/xdg-open "$url"''
+    }
+  '';
+
+  # macOS 用: PATH の先頭に mplsOpen を `open` という名前で置いて mpls を起動する。
+  # mpls が外部コマンドとして呼ぶのはブラウザ起動の open だけなので、影響はそこに閉じる。
+  mplsDarwin = pkgs.writeShellScript "mpls" ''
+    PATH=${
+      pkgs.linkFarm "mpls-open-shim" [
+        {
+          name = "bin/open";
+          path = mplsOpen;
+        }
+      ]
+    }/bin:$PATH
+    export PATH
+    exec ${pkgs.mpls}/bin/mpls "$@"
+  '';
 in
 {
   programs.helix = {
@@ -462,8 +511,9 @@ in
         # 寄せる。`mpls --list-themes` に osaka-jade は無いので、同系統の暗い緑
         # である everforest-dark を代わりに使う。--no-auto を付けないとファイルを
         # 開いた時点でブラウザが立ち上がるので、space+m で明示的に開く運用にする。
+        # ブラウザの開き方は上の mplsOpen を参照（Wave の中なら web ブロック）。
         mpls = {
-          command = "mpls";
+          command = if isDarwin then "${mplsDarwin}" else "mpls";
           args = [
             "--theme"
             "everforest-dark"
@@ -480,11 +530,13 @@ in
             "localhost:${toString config.local.plantuml.port}"
             "--plantuml-disable-tls"
           ]
-          # macOS では `open -a <browser>` に渡されるのでアプリ名で指定する。
-          # Linux では xdg-open（既定のブラウザ）に任せる。
-          ++ pkgs.lib.optionals pkgs.stdenv.hostPlatform.isDarwin [
+          # macOS では `open -a <browser>` に渡されるのでアプリ名で指定する
+          # （Wave の外で開くときに使われる）。
+          # Linux では --browser がコマンドとして実行されるので mplsOpen を直接渡す。
+          # Wave の外では xdg-open（既定のブラウザ）に落ちる。
+          ++ [
             "--browser"
-            "Safari"
+            (if isDarwin then "Safari" else "${mplsOpen}")
           ];
         };
         # helix 同梱の定義は pylsp が既定なので明示的に上書きする。
