@@ -124,6 +124,69 @@ let
     }
   '';
 
+  # カーソル位置の URL を開く（space+o）。Wave の中なら web ブロック、外なら既定のブラウザ。
+  #
+  # hx 標準の gf も URL を開けるが、open クレート経由で /usr/bin/open を絶対パスで
+  # 呼ぶため、mpls のように PATH の差し替えでは Wave に向けられない。なので別キーにする。
+  #
+  # :pipe-to で呼ぶので stdin は選択範囲。選択に URL が含まれていればそれを開く
+  # （未保存のバッファでも URL を選択すれば開ける）。カーソルだけ（1 文字）のときは
+  # 保存済みファイルのカーソル行を読み、カーソル列にかかる URL、無ければ行の先頭の URL を開く。
+  openUrl = pkgs.writeShellApplication {
+    name = "hx-open-url";
+    runtimeInputs = [ pkgs.perl ];
+    text = ''
+      buffer="''${1:-}"
+      line="''${2:-1}"
+      col="''${3:-1}"
+
+      # 行（または選択範囲）から URL を拾う。$col は 1 始まりの文字位置で、0 なら列を見ない。
+      # 末尾の句読点や markdown の閉じ括弧は URL に含めない。
+      pick() {
+        perl -CSD -e '
+          my $col = shift;
+          local $/; my $s = <STDIN>;
+          my ($first, $hit);
+          while ($s =~ m{(https?://[^\s<>"`'"'"')\]]+)}g) {
+            my ($u, $e) = ($1, pos($s));
+            my $b = $e - length($u);
+            $u =~ s/[.,;:!?]+$//;
+            $first //= $u;
+            if ($col > 0 && $b < $col && $col <= $e + 1) { $hit = $u; last }
+          }
+          print $hit // $first // "";
+        ' "$1"
+      }
+
+      url="$(pick 0)"
+      if [ -z "$url" ] && [ -f "$buffer" ]; then
+        url="$(sed -n "''${line}p" "$buffer" | pick "$col")"
+      fi
+      if [ -z "$url" ]; then
+        echo "URL が見つかりません（未保存の行なら URL を選択してから実行してください）" >&2
+        exit 1
+      fi
+
+      exec ${waveOpen} "$url"
+    '';
+  };
+
+  # URL を 1 つ受け取って、Wave の中なら web ブロック、外なら既定のブラウザで開く。
+  # mplsOpen と同じ判定（WAVETERM_JWT の有無）。
+  waveOpen = pkgs.writeShellScript "wave-open" ''
+    url="$1"
+    if [ -n "''${WAVETERM_JWT:-}" ]; then
+      wsh="$(command -v wsh || true)"
+      if [ -z "$wsh" ] && [ -x "$HOME/Library/Application Support/waveterm/bin/wsh" ]; then
+        wsh="$HOME/Library/Application Support/waveterm/bin/wsh"
+      fi
+      if [ -n "$wsh" ]; then
+        exec "$wsh" web open "$url"
+      fi
+    fi
+    exec ${if isDarwin then "/usr/bin/open" else "${pkgs.xdg-utils}/bin/xdg-open"} "$url"
+  '';
+
   # macOS 用: PATH の先頭に mplsOpen を `open` という名前で置いて mpls を起動する。
   # mpls が外部コマンドとして呼ぶのはブラウザ起動の open だけなので、影響はそこに閉じる。
   mplsDarwin = pkgs.writeShellScript "mpls" ''
@@ -192,6 +255,9 @@ in
       # %{buffer_name} は helix の cwd からの相対パス（cwd 外なら絶対パス）で、
       # シェルも同じ cwd で走るのでそのまま渡せる。
       keys.normal.space.i = '':insert-output ${pasteImage}/bin/hx-paste-image "%{buffer_name}"'';
+
+      # カーソル位置（または選択範囲）の URL を開く。Wave の中なら web ブロックで開く。
+      keys.normal.space.o = '':pipe-to ${openUrl}/bin/hx-open-url "%{buffer_name}" %{cursor_line} %{cursor_column}'';
     };
 
     # ~/.config/helix/themes/osaka_jade.toml を生成する。
