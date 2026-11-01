@@ -22,6 +22,7 @@
       "karabiner-elements"
       "claude"
       "visual-studio-code"
+      "wave"
     ];
 
     # Mac App Store 製アプリを入れたい場合(任意):
