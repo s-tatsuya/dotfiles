@@ -999,7 +999,3 @@ colima delete                                                 # VM を破棄（�
   - NixOS の `virtualisation.docker` に相当するものが Ubuntu + standalone home-manager には無い
   - `scripts/ubuntu-bootstrap.sh` が Docker 公式 apt リポジトリから入れ、`usermod -aG docker` まで行う
 - Ubuntu のログインシェル（`chsh`）は `/etc/passwd` の書き換えなので同上。`~/.zshrc` の中身は home-manager が持つ
-
-### Herdr のプラグインも Nix で管理しない
-
-- `herdr plugin install persiyanov/herdr-reviewr`: コーディングエージェントの変化点を確認しやすくするためのプラグイン
