@@ -668,6 +668,191 @@ docker compose -f ~/.config/plantuml/compose.yaml pull                   # イ�
 - **macOS では colima に依存する**。`colima stop` 中は markdown プレビューの UML が出ない。ホスト常駐の JVM だったころに比べ、メモリ総量も VM のぶん増えている（コンテナ内の JVM + VM のオーバーヘッド）。両 OS で構成が揃うことと、ホストから JDK を追い出せることとの引き換え。
 - **イメージの版は `flake.lock` の管轄外**。`plantuml/plantuml-server:jetty` は可変タグなので、`docker compose pull` を叩いたときに中身が変わる。再現性を固めたいなら `image` に `@sha256:...` を付けて固定する（現行のダイジェストは `modules/home/plantuml.nix` のコメントに控えてある）。
 
+### Wave Terminal と markdown プレビュー
+
+Wave Terminal の本体は Homebrew cask（`modules/darwin/homebrew.nix`）で入れ、設定は `modules/home/waveterm.nix` が生成する。
+
+#### PlantUML は Wave のプレビューではなく mpls で描画する
+
+Wave 内蔵の markdown プレビュー（preview ブロック）が描画できる図は **Mermaid だけで、PlantUML には対応していない**（0.14.5 のアプリ本体で確認）。対象がローカルのファイルでも SSH 先のファイルでも同じ。
+
+そこで、Helix の `space m` で開く mpls のプレビューを、**Wave の中で hx を動かしているときだけ Wave の web ブロックで開く**ようにしている（`modules/home/helix.nix` の `mplsOpen` / `mplsDarwin`）。Wave の外（Ghostty など）では今までどおり Safari で開く。
+
+全体像（実線はローカルで実装・確認済みの部分、点線は SSH 先の仮説で未検証）：
+
+```plantuml
+@startuml
+skinparam shadowing false
+skinparam defaultFontSize 12
+skinparam rectangle {
+  RoundCorner 8
+}
+skinparam rectangle<<wave>> {
+  BackgroundColor #DCEBFF
+  BorderColor #3B6FB6
+}
+skinparam rectangle<<editor>> {
+  BackgroundColor #E3F4DC
+  BorderColor #4F8A3C
+}
+skinparam rectangle<<lsp>> {
+  BackgroundColor #FFF1D6
+  BorderColor #B7832F
+}
+skinparam rectangle<<server>> {
+  BackgroundColor #F8E1EE
+  BorderColor #A34C7A
+}
+skinparam rectangle<<script>> {
+  BackgroundColor #EEEEEE
+  BorderColor #777777
+}
+
+node "ローカル（Mac）" as mac {
+  rectangle "Wave Terminal（Electron アプリ）" <<wave>> as wave {
+    rectangle "端末ブロック" <<wave>> as term
+    rectangle "web ブロック\n（Chromium の webview）" <<wave>> as web
+    rectangle "wavesrv\n（Wave のバックエンド）" <<wave>> as wavesrv
+  }
+  rectangle "hx（Helix）" <<editor>> as hx
+  rectangle "mpls（LSP）" <<lsp>> as mpls {
+    rectangle "プレビューサーバ\n:ランダムなポート\nHTTP + WebSocket" <<lsp>> as preview
+  }
+  rectangle "open（差し替え）\nmpls-open" <<script>> as shim
+  rectangle "Safari\n（ブラウザ）" as safari
+  node "colima VM（docker）" as colima {
+    rectangle "plantuml-server\n127.0.0.1:45123" <<server>> as puml
+  }
+}
+
+node "SSH 先（Ubuntu）※未検証" as remote {
+  rectangle "シェル\n（Wave が wsh を配置）" <<wave>> as rshell
+  rectangle "hx（Helix）" <<editor>> as rhx
+  rectangle "mpls（LSP）" <<lsp>> as rmpls {
+    rectangle "プレビューサーバ\n:固定ポート（--port）" <<lsp>> as rpreview
+  }
+  rectangle "mpls-open\n（--browser に指定）" <<script>> as rshim
+  node "docker" as rdocker {
+    rectangle "plantuml-server\n127.0.0.1:45123" <<server>> as rpuml
+  }
+}
+
+' ── ローカル（実装・確認済み）──
+term --> hx : pty
+hx --> mpls : LSP（stdio）
+mpls --> puml : ① HTTP GET /plantuml/svg/…\nmpls が SVG を取得して HTML に埋め込む
+mpls --> shim : ② open -g -a Safari <URL>
+shim --> wavesrv : ③ wsh web open <URL>\n（WAVETERM_JWT があるとき）
+shim --> safari : ③' /usr/bin/open\n（Wave の外のとき）
+wavesrv --> web : ④ web ブロックを追加
+web --> preview : ⑤ http://localhost:PORT/\nws://localhost:PORT/ws
+
+' ── SSH 先（仮説）──
+term ..> rshell : Wave の SSH 接続
+rshell ..> rhx : pty
+rhx ..> rmpls : LSP（stdio）
+rmpls ..> rpuml : HTTP GET /plantuml/svg/…
+rmpls ..> rshim : <URL>
+rshim ..> wavesrv : wsh web open <URL>\n（Wave の SSH 接続経由）
+web ..> rpreview : localhost:PORT を ssh -L で転送\n（両側で同じポート番号）
+
+legend right
+  |= 色 |= 担当 |
+  |<back:#DCEBFF>　　　</back>| Wave の機能 |
+  |<back:#E3F4DC>　　　</back>| エディタ |
+  |<back:#FFF1D6>　　　</back>| LSP（mpls） |
+  |<back:#F8E1EE>　　　</back>| レンダリングサーバ（docker） |
+  |<back:#EEEEEE>　　　</back>| dotfiles のスクリプト |
+  実線 = 実装済み（ローカル）
+  点線 = 仮説（SSH 先、未検証）
+endlegend
+@enduml
+```
+
+ローカルでの流れ：
+
+1. **mpls → plantuml-server**：PlantUML のコードブロックは **mpls（Go のプロセス）が自分で** `GET /plantuml/svg/<encoded>` を叩いて SVG を取り、HTML に埋め込む（`pkg/plantuml/plantuml.go`）。プレビューを表示するブラウザや web ブロックは、PlantUML サーバに直接アクセスしない。
+2. **mpls → `open`**：macOS の mpls は、ブラウザを開くとき `open -g -a <--browser の値> <URL>` を固定で実行する（`internal/previewserver` の `Openbrowser`）。`--browser` はアプリ名として `-a` に渡されるだけなので、ここに別のコマンドを指定することはできない。そこで `mplsDarwin` が、`mplsOpen` を `open` という名前で PATH の先頭に置いてから mpls を起動する。
+3. **`mplsOpen` の分岐**：`WAVETERM_JWT`（Wave の端末が子プロセスに渡す認証トークンで、wsh はこれを使って Wave 本体に接続する）があれば `wsh web open <URL>` を実行する。無ければ本物の `/usr/bin/open` に引数をそのまま渡す。hx → mpls → `open` の順に環境変数がそのまま引き継がれるので、この判定が使える。
+4. **wavesrv → web ブロック**：今のタブに web ブロックが 1 つ追加される。`space m` を押すたびに 1 つずつ増える。
+5. **web ブロック → プレビューサーバ**：URL は `http://localhost:<port>/<相対パス>` で、ライブ更新には `ws://localhost:<port>/ws` を使う。どちらもホスト名が `localhost` 固定（`internal/mpls/workspace.go` と `web/ws.js`）。ポートは起動のたびにランダム（10000〜）。
+
+Linux の mpls は `--browser` の値をそのままコマンドとして `<browser> <URL>` で実行するので、`open` を差し替える必要はなく、`--browser` に `mplsOpen` を直接渡している（Wave の外では `xdg-open` に落ちる）。
+
+役割の切り分け：
+
+| 担当 | 何をするか |
+|---|---|
+| Wave | 端末（pty）、web ブロックの表示、`wsh` による操作の受け口、SSH 接続 |
+| エディタ（hx） | mpls を LSP として起動し、`space m` で `open-preview` を送る |
+| LSP（mpls） | markdown を HTML にする、PlantUML サーバから SVG を取る、プレビュー用の HTTP / WebSocket サーバを動かす |
+| plantuml-server | PlantUML のソースを SVG にする（前節の docker compose） |
+| dotfiles のスクリプト | `mplsOpen`：プレビューを Wave と外部ブラウザのどちらで開くか振り分ける |
+
+#### SSH 先のファイル（仮説・未検証）
+
+**ここから下は、実際に SSH で接続して確かめていない。** 図の点線部分にあたる。仮説とその根拠を書き、検証の手順は最後にまとめる。
+
+想定している構成：Wave の SSH 接続（接続先を選んで開く端末ブロック）で SSH 先に入り、**SSH 先で** hx と mpls を動かす。SSH 先はこの dotfiles を当てた Ubuntu（`s-tatsuya@ubuntu`）。
+
+| # | 仮説 | 根拠 | 状態 |
+|---|---|---|---|
+| H1 | Wave の SSH 接続の端末にも `WAVETERM_JWT` と `wsh` があり、SSH 先から `wsh web open` を実行すると**手元の** Wave に web ブロックが開く | Wave は SSH 接続先に wsh を自動で配置し、接続経由で手元の Wave 本体と通信させる | 未検証 |
+| H2 | SSH 先の mpls は **SSH 先の** `localhost:45123` にある plantuml-server を使う。この dotfiles を当てた Ubuntu なら追加の設定は要らない | ① のとおり SVG を取りに行くのは mpls のプロセスなので、mpls を動かしているマシンから PlantUML サーバに届けばよい。Ubuntu でも `plantuml.nix` が同じポートでコンテナを立てる | 未検証 |
+| H3 | 手元の web ブロックから SSH 先のプレビューサーバに届かせるには、**SSH 先と同じポート番号で** `ssh -L` の転送が必要 | ⑤ のとおり URL も WebSocket も `localhost:<port>` で固定。手元の web ブロックにとって `localhost` は Mac 自身なので、そのままでは届かない。WebSocket のポートは HTML に埋め込まれているので、手元で別の番号にずらすとライブ更新が切れる | ソースで確認済み、動作は未検証 |
+| H4 | H3 のために、mpls のポートを `--port` で固定する必要がある | 既定では起動のたびにランダムなので、事前に転送を張っておけない | 未実装 |
+| H5 | Wave 自身の SSH 接続は `~/.ssh/config` の `LocalForward` を扱わない（扱わないなら、転送は別の端末で `ssh -N -L` を張る） | Wave は自前の SSH クライアントで接続する。`LocalForward` を読むかどうかは調べていない | 未検証 |
+
+SSH 先がこの dotfiles を当てたホストではない場合、H2 は成り立たない。その場合は、SSH 先にもコンテナを立てるか、手元のサーバを `ssh -R 45123:localhost:45123 <host>` で SSH 先に転送する（mpls の引数は `localhost:45123` のままでよい）。
+
+**注意：mpls のプレビューサーバは全インターフェースで待ち受ける。** `http.Server{Addr: ":<port>"}` なので `127.0.0.1` ではなく `0.0.0.0` で listen する（`internal/previewserver/previewserver.go`）。手元の Mac でも SSH 先でも、mpls が動いている間は同じ LAN からプレビュー（編集中の markdown の中身）が見える。plantuml-server のほうは `127.0.0.1` に限定して公開しているので、こちらは問題ない。
+
+#### SSH 先での検証手順
+
+H1〜H5 を順番に確かめる。どれかが崩れたら、そこで止めて構成を見直す。
+
+```bash
+# ── H1: SSH 先の端末から手元の Wave を操作できるか ──
+# Wave で SSH 接続の端末ブロックを開き、SSH 先で：
+echo "${WAVETERM_JWT:+set}"; command -v wsh      # set とパスが出れば OK
+wsh web open https://example.com                  # 手元の Wave に web ブロックが開けば OK
+
+# ── H2: SSH 先の mpls から PlantUML サーバに届くか ──
+# SSH 先で：
+curl -o /dev/null -w '%{http_code}\n' \
+  http://127.0.0.1:45123/plantuml/svg/SyfFKj2rKt3CoKnELR1Io4ZDoSa70000   # 200 なら OK
+
+# ── H4: ポートを固定して mpls を起動できるか ──
+# ひとまず手で試す（固定するなら helix.nix の mpls の args に "--port" "<port>" を足す）。
+# 手元の Mac で mpls を動かしているときに同じ番号を使うとぶつかるので、SSH 先専用の番号にする。
+
+# ── H3 / H5: 転送してプレビューが表示されるか ──
+# 手元の Mac の別の端末で（Wave の SSH 接続とは別に張る）：
+ssh -N -L <port>:localhost:<port> <host>
+# SSH 先の hx で markdown を開いて space m
+#   → 手元の Wave に web ブロックが開き、図が描画され、編集するとライブで更新されれば OK
+```
+
+確認できたら、この節の「仮説」の表を結果で書き換え、必要な設定（`--port` の固定など）を dotfiles に反映する。
+
+#### カラーテーマ（Osaka Jade）
+
+Ghostty / Helix と同じ Osaka Jade の色に揃えている。home-manager の `programs.waveterm` を使う。
+
+| ファイル | 中身 |
+|---|---|
+| `~/.config/waveterm/settings.json` | `term:theme = "osaka-jade"`、`window:bgcolor = "#111c18"`（タブバーなどウィンドウ全体の地の色） |
+| `~/.config/waveterm/termthemes.json` | 端末テーマ `osaka-jade`（`ghostty.nix` と同じ 16 色） |
+| `~/.config/waveterm/backgrounds.json` | タブの背景とブロックの枠線色をまとめたプリセット `bg@osaka-jade`（home-manager にオプションが無いので `xdg.configFile` で直接置く） |
+
+- **タブの背景プリセットはタブごとの設定**（タブのメタデータ `tab:background`）で、全タブにまとめて効かせる設定は無い。タブを右クリック → Backgrounds → Osaka Jade で選ぶか、そのタブの端末で `wsh setmeta -b tab tab:background=bg@osaka-jade` を実行する。
+- **`settings.json` は Nix ストアへの読み取り専用 symlink になる**ので、Wave の設定画面や `wsh setconfig` からは変更できない。設定は `waveterm.nix` で変える。
+- **初回の switch の前に、手元の `settings.json` を退避する**。Wave が作った通常のファイルが残っていると、home-manager が上書きを拒否して switch が失敗する（`backupFileExtension` は設定していない）。
+  ```bash
+  mv ~/.config/waveterm/settings.json ~/.config/waveterm/settings.json.bak
+  ```
+- ボタンなどに使われる Wave のアクセントカラー（緑）は設定項目が無いので、既定のまま。
+
 ### フォント
 
 `explex-nf` は `home.packages` に入れているが、OS から見えるようにする経路が違う。
