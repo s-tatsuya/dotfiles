@@ -27,6 +27,7 @@ in
 
       # 下の themes で定義した端末テーマ。
       "term:theme" = "osaka-jade";
+      "term:fontfamily" = "Explex Console NF";
 
       # ウィンドウ全体の地の色（タブバーやブロックの隙間に見える部分）。
       # Wave は CSS 変数 --main-bg-color をこれで上書きする。
@@ -83,4 +84,13 @@ in
       "bg:activebordercolor" = sage;
     };
   };
+
+  # 右端のウィジェットバー（terminal / files / web … と歯車）はワークスペース単位の
+  # メタデータ layout:widgetsvisible で消している。settings.json には対応する設定が無く、
+  # Wave の内部 DB に保存されるので、ここでは管理できない。新しいワークスペースでは
+  # その中の端末で叩き直す（true で元に戻る）:
+  #   wsh setmeta -b workspace layout:widgetsvisible=false
+  #
+  # widgets.json の display:hidden は各アイコンを隠すだけで、バー自体（幅 48px と歯車）は残る。
+  # バーを消すと歯車も消えるので、ブロックは `wsh web open <url>` や `wsh view <path>` で開く。
 }
