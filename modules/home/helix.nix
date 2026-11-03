@@ -187,6 +187,22 @@ let
     exec ${if isDarwin then "/usr/bin/open" else "${pkgs.xdg-utils}/bin/xdg-open"} "$url"
   '';
 
+  # mpls のプレビューはコードにフォントを指定しておらず（html の sans-serif のみ）、
+  # ブラウザ既定の monospace には日本語や罫線が無いので別フォントに落ちて桁がずれる。
+  # mpls には CSS を渡すオプションが無く、styles.css はバイナリに go:embed されているので、
+  # ビルド前に端末と同じ Explex（日本語 2 桁幅の等幅。packages.nix で導入）を足す。
+  # Wave の web ブロックにもフォント設定は無い（web:* は zoom などのみ）。
+  mpls = pkgs.mpls.overrideAttrs (old: {
+    postPatch = (old.postPatch or "") + ''
+      cat >> internal/previewserver/web/styles.css <<'EOF'
+
+      pre, code, kbd, samp {
+        font-family: "Explex Console NF", ui-monospace, monospace;
+      }
+      EOF
+    '';
+  });
+
   # macOS 用: PATH の先頭に mplsOpen を `open` という名前で置いて mpls を起動する。
   # mpls が外部コマンドとして呼ぶのはブラウザ起動の open だけなので、影響はそこに閉じる。
   mplsDarwin = pkgs.writeShellScript "mpls" ''
@@ -199,7 +215,7 @@ let
       ]
     }/bin:$PATH
     export PATH
-    exec ${pkgs.mpls}/bin/mpls "$@"
+    exec ${mpls}/bin/mpls "$@"
   '';
 in
 {
