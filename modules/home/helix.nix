@@ -191,12 +191,15 @@ let
   # ブラウザ既定の monospace には日本語や罫線が無いので別フォントに落ちて桁がずれる。
   # mpls には CSS を渡すオプションが無く、styles.css はバイナリに go:embed されているので、
   # ビルド前に端末と同じ Explex（日本語 2 桁幅の等幅。packages.nix で導入）を足す。
+  # 本文も含めてページ全体を Explex にそろえる（html）。pre / code などはブラウザの
+  # 既定スタイルが monospace を当てて html から継承しないので個別にも指定する。
+  # 数式（KaTeX）はクラス単位で自前のフォントを指定しているのでそのまま。
   # Wave の web ブロックにもフォント設定は無い（web:* は zoom などのみ）。
   mpls = pkgs.mpls.overrideAttrs (old: {
     postPatch = (old.postPatch or "") + ''
       cat >> internal/previewserver/web/styles.css <<'EOF'
 
-      pre, code, kbd, samp {
+      html, pre, code, kbd, samp {
         font-family: "Explex Console NF", ui-monospace, monospace;
       }
       EOF
