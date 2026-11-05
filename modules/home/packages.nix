@@ -1,4 +1,18 @@
 { pkgs, inputs, ... }:
+let
+  # explex-nf v0.0.3 は macOS で斜体の m が消える（yuru7/Explex#1、upstream 未修正）。
+  # 原因は BoldItalic の 2 つの不具合で、Wave（Chromium）のテストで確認した:
+  #   - m 系グリフに 2 点だけの退化した輪郭があり、CoreText がグリフごと描かない
+  #   - BoldItalic の weight が 400 のままで、ただの斜体（\e[3m）にも BoldItalic が選ばれる
+  # fontTools で両方を直したコピーを作って入れる。詳細は fonts/fix-explex.py。
+  explex-nf = pkgs.runCommand "explex-nf-fixed-${pkgs.explex-nf.version}" {
+    nativeBuildInputs = [ (pkgs.python3.withPackages (ps: [ ps.fonttools ])) ];
+  } ''
+    cp -r ${pkgs.explex-nf} $out
+    chmod -R u+w $out
+    python3 ${./fonts/fix-explex.py} $out/share/fonts/truetype/*/*.ttf
+  '';
+in
 {
   home.packages = with pkgs; [
     ripgrep
@@ -14,6 +28,7 @@
     # ターミナル用途ではこちらが正しい。
     # 参照側は modules/home/ghostty.nix の font-family。フォントはアプリ横断の
     # リソースなので、特定アプリのモジュールではなくここに置く。
+    # 実体は上の let で macOS の斜体の不具合を直したもの。
     explex-nf
   ] ++ [
     # nixpkgs にないので flake input から。system は評価するホストごとに解決されるので Linux でもそのまま動く
