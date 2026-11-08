@@ -1,0 +1,2 @@
+# Karabiner が設定の保存時に自動で作るバックアップ。履歴は git で持つので不要
+automatic_backups/
