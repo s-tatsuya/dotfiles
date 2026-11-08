@@ -12,6 +12,16 @@ let
 
   isDarwin = pkgs.stdenv.hostPlatform.isDarwin;
 
+  # スペル・文法チェック用の LSP（下の language-server.codebook / harper-ls）。
+  # codebook はスペル担当で、tree-sitter で変数名（camelCase を分割）・コメント・文字列を
+  # 見る。harper は英語の文法担当で、markdown の本文とコードのコメントを見る。
+  # どちらも日本語の部分は無視し、日本語の文中の英単語だけをチェックする。
+  # harper は対応しない言語では何もしないので、prose はスペルだけ（codebook のみ）に付ける。
+  spellServers = [
+    "codebook"
+    "harper-ls"
+  ];
+
   # クリップボードの画像を、編集中のファイルと同じ階層の images/ に JPEG で保存し、
   # markdown の画像リンクを stdout に出す。space+i から :insert-output で呼ぶので、
   # stdout がそのままカーソル位置に挿入される（末尾に改行を付けないこと）。
@@ -234,6 +244,9 @@ in
       # Nix
       nil
       nixfmt-rfc-style
+      # スペル（codebook）・英語の文法（harper）。設定は language-server を参照
+      codebook
+      harper
       # Markdown / YAML / TOML
       marksman
       # mpls: markdown をブラウザにライブプレビューする LSP。
@@ -592,6 +605,41 @@ in
     # ~/.config/helix/languages.toml を生成する。
     languages = {
       language-server = {
+        codebook = {
+          command = "codebook-lsp";
+          args = [ "serve" ];
+          # 辞書（words）は repo の実ファイルを直接読ませる。理由は codebook.toml の冒頭。
+          config.globalConfigPath = "~/dotfiles/modules/home/codebook.toml";
+        };
+
+        harper-ls = {
+          command = "harper-ls";
+          args = [ "--stdio" ];
+          # スペルは codebook に任せる（同じ誤字が二重に出るのと、SplitWords が
+          # "mpls" → "mp ls" のような的外れな提案を出すため）。
+          # 残りは日本語まじりの文章とコードのコメントで誤検知ばかりになるルール
+          # （この repo の .nix と README で数えて 200 件超 → 1 件）。文法系
+          # （主語と動詞の一致など）は残している。
+          config.harper-ls.linters = {
+            SpellCheck = false;
+            SplitWords = false;
+            # 日本語の文やコメントの書き出しが小文字だと毎回出る
+            SentenceCapitalization = false;
+            UseTitleCase = false;
+            # コマンド名の docker / markdown なども「Docker にしろ」と言われる
+            OrthographicConsistency = false;
+            # --flag や ... などコード片の記号に反応する
+            Dashes = false;
+            UnclosedQuotes = false;
+            UseEllipsisCharacter = false;
+            EllipsisLength = false;
+            NumericRangeEnDash = false;
+            # 日本語の読点を英語の文脈とみなして指摘する
+            CommaFixes = false;
+            ExpandStandardInputAndOutput = false;
+          };
+        };
+
         # markdown のライブプレビュー用 LSP。テーマは editor 側の osaka_jade に
         # 寄せる。`mpls --list-themes` に osaka-jade は無いので、同系統の暗い緑
         # である everforest-dark を代わりに使う。--no-auto を付けないとファイルを
@@ -638,7 +686,7 @@ in
       language = [
         {
           name = "nix";
-          language-servers = [ "nil" ];
+          language-servers = [ "nil" ] ++ spellServers;
           formatter.command = "nixfmt";
           auto-format = true;
         }
@@ -647,19 +695,26 @@ in
           language-servers = [
             "marksman"
             "mpls"
-          ];
+          ]
+          ++ spellServers;
           formatter = prettierWith "markdown";
           auto-format = true;
         }
         {
           name = "yaml";
-          language-servers = [ "yaml-language-server" ];
+          language-servers = [
+            "yaml-language-server"
+            "codebook"
+          ];
           formatter = prettierWith "yaml";
           auto-format = true;
         }
         {
           name = "toml";
-          language-servers = [ "taplo" ];
+          language-servers = [
+            "taplo"
+            "codebook"
+          ];
           formatter = {
             command = "taplo";
             args = [
@@ -677,25 +732,25 @@ in
         }
         {
           name = "typescript";
-          language-servers = [ "typescript-language-server" ];
+          language-servers = [ "typescript-language-server" ] ++ spellServers;
           formatter = prettierWith "typescript";
           auto-format = true;
         }
         {
           name = "tsx";
-          language-servers = [ "typescript-language-server" ];
+          language-servers = [ "typescript-language-server" ] ++ spellServers;
           formatter = prettierWith "typescript";
           auto-format = true;
         }
         {
           name = "javascript";
-          language-servers = [ "typescript-language-server" ];
+          language-servers = [ "typescript-language-server" ] ++ spellServers;
           formatter = prettierWith "babel";
           auto-format = true;
         }
         {
           name = "jsx";
-          language-servers = [ "typescript-language-server" ];
+          language-servers = [ "typescript-language-server" ] ++ spellServers;
           formatter = prettierWith "babel";
           auto-format = true;
         }
@@ -704,7 +759,8 @@ in
           language-servers = [
             "pyright"
             "ruff"
-          ];
+          ]
+          ++ spellServers;
           formatter = {
             command = "ruff";
             args = [
@@ -716,9 +772,14 @@ in
         }
         {
           name = "rust";
-          language-servers = [ "rust-analyzer" ];
+          language-servers = [ "rust-analyzer" ] ++ spellServers;
           formatter.command = "rustfmt";
           auto-format = true;
+        }
+        {
+          # コミットメッセージ（git commit で開く COMMIT_EDITMSG）。既定では LSP が無い。
+          name = "git-commit";
+          language-servers = spellServers;
         }
       ];
     };
