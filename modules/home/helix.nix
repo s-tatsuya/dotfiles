@@ -216,6 +216,12 @@ let
   # 既定スタイルが monospace を当てて html から継承しないので個別にも指定する。
   # 数式（KaTeX）はクラス単位で自前のフォントを指定しているのでそのまま。
   # Wave の web ブロックにもフォント設定は無い（web:* は zoom などのみ）。
+  #
+  # あわせて ```markmap のコードブロックをマインドマップとして描けるようにする
+  # （mpls は mermaid と PlantUML だけ対応）。markmap のライブラリは CDN から読まずに
+  # バイナリへ埋め込む（オフラインでも描ける）。mpls は決まったファイルしか配信しないので、
+  # 配信済みの ws.js の前にライブラリ、後ろに描画処理（mpls-markmap.js）を連結する。
+  # 版は実績のある 0.18.12（2025-06）と d3 7.9.0。上げるときは hash も更新する。
   mpls = pkgs.mpls.overrideAttrs (old: {
     postPatch = (old.postPatch or "") + ''
       cat >> internal/previewserver/web/styles.css <<'EOF'
@@ -223,9 +229,49 @@ let
       html, pre, code, kbd, samp {
         font-family: "Explex Console NF", ui-monospace, monospace;
       }
+
+      svg.markmap {
+        display: block;
+        width: 100%;
+        height: 480px;
+        --markmap-text-color: var(--text-color);
+        --markmap-code-bg: var(--code-background-color);
+        --markmap-font: 300 16px/20px "Explex Console NF", sans-serif;
+      }
       EOF
+
+      # mpls は ws.js を fmt.Sprintf(ws.js, port) で配信する（中の %d にポートを入れる）。
+      # 連結するライブラリ側の % も書式指定として解釈されて壊れるので %% にしておく。
+      ws=internal/previewserver/web/ws.js
+      {
+        sed 's/%/%%/g' ${markmapAssets.d3}
+        echo
+        sed 's/%/%%/g' ${markmapAssets.lib}
+        echo
+        sed 's/%/%%/g' ${markmapAssets.view}
+        echo
+        cat "$ws"
+        echo
+        sed 's/%/%%/g' ${./mpls-markmap.js}
+      } > ws.js.new
+      mv ws.js.new "$ws"
     '';
   });
+
+  markmapAssets = {
+    d3 = pkgs.fetchurl {
+      url = "https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js";
+      hash = "sha256-8glLv2FBs1lyLE/kVOtsSw8OQswQzHr5IfwVj864ZTk=";
+    };
+    lib = pkgs.fetchurl {
+      url = "https://cdn.jsdelivr.net/npm/markmap-lib@0.18.12/dist/browser/index.iife.js";
+      hash = "sha256-7f4yGj/kbpwPCvg3AUWu4YCXXyQ/IkLw+BgaxCc+COE=";
+    };
+    view = pkgs.fetchurl {
+      url = "https://cdn.jsdelivr.net/npm/markmap-view@0.18.12/dist/browser/index.js";
+      hash = "sha256-hh620grxiqowCHjUbWlXIqc2JcWLQPSSNq8Cfxi3Tgc=";
+    };
+  };
 
   # macOS 用: PATH の先頭に mplsOpen を `open` という名前で置いて mpls を起動する。
   # mpls が外部コマンドとして呼ぶのはブラウザ起動の open だけなので、影響はそこに閉じる。
