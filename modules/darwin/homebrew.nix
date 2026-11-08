@@ -23,6 +23,9 @@
       "claude"
       "visual-studio-code"
       "wave"
+      # Chrome は自分で自動更新する（cask も auto_updates）ので、onActivation.upgrade の
+      # brew upgrade では触られず、Chrome 自身の更新に任せる形になる。
+      "google-chrome"
     ];
 
     # Mac App Store 製アプリを入れたい場合(任意):
