@@ -12,6 +12,9 @@ let
 
   isDarwin = pkgs.stdenv.hostPlatform.isDarwin;
 
+  # 今いる Wave ブロックに向けて wsh を実行するラッパー（理由は wsh-here.nix）。
+  wshHere = import ./wsh-here.nix { inherit pkgs; };
+
   # スペル・文法チェック用の LSP（下の language-server.codebook / harper-ls）。
   # codebook はスペル担当で、tree-sitter で変数名（camelCase を分割）・コメント・文字列を
   # 見る。harper は英語の文法担当で、markdown の本文とコードのコメントを見る。
@@ -115,14 +118,8 @@ let
     url="''${!#}" # どちらの OS でも最後の引数が URL
 
     if [ -n "''${WAVETERM_JWT:-}" ]; then
-      # wsh は Wave が自分の端末の PATH に足すが、念のため既定の置き場も見る。
-      wsh="$(command -v wsh || true)"
-      if [ -z "$wsh" ] && [ -x "$HOME/Library/Application Support/waveterm/bin/wsh" ]; then
-        wsh="$HOME/Library/Application Support/waveterm/bin/wsh"
-      fi
-      if [ -n "$wsh" ]; then
-        exec "$wsh" web open "$url"
-      fi
+      # 宛先のブロックは wsh-here が今の Wave ブロックに合わせる（herdr 越しでも）。
+      ${wshHere}/bin/wsh-here web open "$url" && exit 0
     fi
 
     ${
@@ -186,13 +183,7 @@ let
   waveOpen = pkgs.writeShellScript "wave-open" ''
     url="$1"
     if [ -n "''${WAVETERM_JWT:-}" ]; then
-      wsh="$(command -v wsh || true)"
-      if [ -z "$wsh" ] && [ -x "$HOME/Library/Application Support/waveterm/bin/wsh" ]; then
-        wsh="$HOME/Library/Application Support/waveterm/bin/wsh"
-      fi
-      if [ -n "$wsh" ]; then
-        exec "$wsh" web open "$url"
-      fi
+      ${wshHere}/bin/wsh-here web open "$url" && exit 0
     fi
     exec ${if isDarwin then "/usr/bin/open" else "${pkgs.xdg-utils}/bin/xdg-open"} "$url"
   '';

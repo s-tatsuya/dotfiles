@@ -1,5 +1,7 @@
-{ lib, ... }:
+{ lib, pkgs, ... }:
 let
+  wshHere = import ./wsh-here.nix { inherit pkgs; };
+
   # ghostty.nix / helix.nix の osaka-jade と同じ色。
   # 元ネタは omarchy の osaka-jade テーマ（https://github.com/Justikun/omarchy-osaka-jade-theme）。
   bg = "#111c18";
@@ -68,6 +70,14 @@ in
       selectionBackground = "${surface}cc";
     };
   };
+
+  # herdr のペインからでも今の Wave ブロックに向けて wsh を使えるようにする。
+  # Wave の wsh は PATH 上で Nix のパッケージより前にあるので、同名のラッパーでは
+  # 隠せない。zsh の関数で wsh-here に回す（理由は wsh-here.nix）。
+  home.packages = [ wshHere ];
+  programs.zsh.initContent = lib.mkAfter ''
+    wsh() { wsh-here "$@"; }
+  '';
 
   # ~/.config/waveterm/backgrounds.json。ブロックの枠線色とタブの背景をまとめた
   # 「タブの背景」プリセット。home-manager の programs.waveterm には対応する
