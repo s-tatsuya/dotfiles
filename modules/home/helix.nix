@@ -139,7 +139,21 @@ let
 
     if [ -n "''${WAVETERM_JWT:-}" ]; then
       # 宛先のブロックは wsh-here が今の Wave ブロックに合わせる（herdr 越しでも）。
-      ${wshHere}/bin/wsh-here web open "$url" && exit 0
+      if out="$(${wshHere}/bin/wsh-here web open "$url" 2>&1)"; then
+        # hx を閉じたらプレビューも閉じる。このスクリプトは mpls の子として起動されるので
+        # $PPID が mpls。hx を閉じると mpls も終わるので、それを待って作ったブロックを消す。
+        # 見張りは裏で動かし、mpls をこのスクリプトの終了待ちで止めない。
+        # 先に手で閉じていた場合は deleteblock が失敗するだけで害はない。
+        block="$(printf '%s\n' "$out" | sed -n 's/^created block block:\(.*\)$/\1/p')"
+        if [ -n "$block" ]; then
+          mpls_pid=$PPID
+          (
+            while kill -0 "$mpls_pid" 2>/dev/null; do sleep 2; done
+            ${wshHere}/bin/wsh-here deleteblock -b "$block"
+          ) </dev/null >/dev/null 2>&1 &
+        fi
+        exit 0
+      fi
     fi
 
     ${
