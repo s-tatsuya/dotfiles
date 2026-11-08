@@ -24,6 +24,10 @@
   #
   # 初回だけ、既存の ~/.config/karabiner（実ディレクトリ）をどかしてから switch すること。
   # home-manager は管理外のファイルを上書きしないので、残っていると switch が止まる。
+  # switch 後は Karabiner を再起動すること（設定画面の Quit, Restart → Restart、または
+  # `launchctl kickstart -k gui/$(id -u)/org.pqrs.service.agent.Karabiner-Core-Service-rev2`）。
+  # Karabiner は起動時に設定ディレクトリの実体を見張り始めるので、起動中に symlink へ
+  # 差し替えると、repo 側の変更（GUI での変更も含む）を読み直さなくなる。
   config = lib.mkIf pkgs.stdenv.hostPlatform.isDarwin {
     xdg.configFile."karabiner".source =
       config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/modules/home/karabiner";
