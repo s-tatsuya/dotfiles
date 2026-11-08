@@ -254,7 +254,7 @@ in
     extraPackages = with pkgs; [
       # Nix
       nil
-      nixfmt-rfc-style
+      nixfmt
       # スペル（codebook）・英語の文法（harper）。設定は language-server を参照
       codebook
       harper
