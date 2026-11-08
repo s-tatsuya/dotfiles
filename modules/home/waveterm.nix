@@ -32,6 +32,12 @@ in
       "term:fontsize" = 14;
       "term:fontfamily" = "Explex Console NF";
 
+      # Option キーを Alt（Meta）として端末アプリに送る。既定では macOS の特殊文字入力に
+      # 使われ、Helix の Alt 系キー（Alt+; の flip_selections など）が届かない。
+      # Ghostty の macos-option-as-alt = true（ghostty.nix）と同じ考え方。
+      # Wave 自身のショートカットで Option を使うものは無い（Alt+0 は Windows 専用）。
+      "term:macoptionismeta" = true;
+
       # ウィンドウ全体の地の色（タブバーやブロックの隙間に見える部分）。
       # Wave は CSS 変数 --main-bg-color をこれで上書きする。
       "window:bgcolor" = bg;
