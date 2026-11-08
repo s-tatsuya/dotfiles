@@ -4,7 +4,8 @@
 # Nix ストアに置かず repo の実ファイルを直接読ませているのは、hx の space+a →
 # "Add to global dictionary" で codebook がこのファイルの words に単語を書き足すため
 # （ストアの symlink だと読み取り専用で書き込めない）。追加された単語は git で管理する。
-# "Add to dictionary"（global でない方）はプロジェクト直下の codebook.toml に書く。
+# "Add to dictionary"（global でない方）はプロジェクトの .helix/codebook.toml に書く
+# （helix.nix のパッチで、ルート直下の codebook.toml から変えている）。
 
 dictionaries = ["en_us"]
 

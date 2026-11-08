@@ -12,6 +12,26 @@ let
 
   isDarwin = pkgs.stdenv.hostPlatform.isDarwin;
 
+  # codebook のプロジェクト辞書を、ルート直下ではなく Helix のプロジェクト設定
+  # ディレクトリ .helix/ に置けるようにする（.helix/languages.toml と同じ場所）。
+  # 上流はファイル名を codebook.toml / .codebook.toml に決め打ちしていて場所を変える
+  # 設定が無いので、探す候補の先頭に .helix/codebook.toml を足す。候補の先頭は
+  # 「辞書がまだ無いとき Add to dictionary で作る場所」も兼ねる。既存の codebook.toml /
+  # .codebook.toml もこれまでどおり読む。上流は保存時に親ディレクトリを作らないので、
+  # .helix/ が無くても保存できるよう create_dir_all を足す。
+  codebook = pkgs.codebook.overrideAttrs (old: {
+    postPatch = (old.postPatch or "") + ''
+      substituteInPlace crates/codebook-config/src/lib.rs \
+        --replace-fail \
+          'static USER_CONFIG_FILES: [&str; 2] = ["codebook.toml", ".codebook.toml"];' \
+          'static USER_CONFIG_FILES: [&str; 3] = [".helix/codebook.toml", "codebook.toml", ".codebook.toml"];' \
+        --replace-fail \
+          '        fs::write(&project_config_path, content)' \
+          '        if let Some(parent) = project_config_path.parent() { fs::create_dir_all(parent)?; }
+              fs::write(&project_config_path, content)'
+    '';
+  });
+
   # 今いる Wave ブロックに向けて wsh を実行するラッパー（理由は wsh-here.nix）。
   wshHere = import ./wsh-here.nix { inherit pkgs; };
 
