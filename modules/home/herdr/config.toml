@@ -1,0 +1,7 @@
+onboarding = false
+
+[theme]
+# 端末の 16 色をそのまま使うテーマ。Ghostty / Wave は Osaka Jade の 16 色にしてある
+# （ghostty.nix / waveterm.nix）ので、herdr も同じ配色になる。
+name = "terminal"
+auto_switch = false

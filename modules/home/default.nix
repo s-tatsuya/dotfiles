@@ -18,6 +18,7 @@
     ./ghostty.nix
     ./waveterm.nix
     ./karabiner.nix
+    ./herdr.nix
 
     # macOS 専用（colima + docker CLI）。中身は isDarwin で閉じてあるので
     # Ubuntu 構成から import しても何も生成されない。あちらの Docker Engine は
