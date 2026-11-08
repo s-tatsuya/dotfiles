@@ -17,6 +17,8 @@
   # 中身:
   #   - IME 用の英数/かな（無変換/変換キー）
   #   - HHKB（vendor_id 1278 = PFU）だけ左 Command と左 Option を入れ替え
+  #   - Keychron K11 Max（vendor_id 13364）を ignore = false で変更対象にする。キーボードと
+  #     マウスを兼ねる機器として見えるため、既定では Karabiner の対象外になり、上記のルールが効かない
   #   - Wave の中だけで効くブロック操作（Ctrl+Shift+Z で最大化、Ctrl+Shift+X で閉じる。
   #     herdr の prefix+z / x に合わせた）
   #
