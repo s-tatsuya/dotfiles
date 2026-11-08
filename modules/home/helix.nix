@@ -665,8 +665,17 @@ in
         codebook = {
           command = "codebook-lsp";
           args = [ "serve" ];
-          # 辞書（words）は repo の実ファイルを直接読ませる。理由は codebook.toml の冒頭。
-          config.globalConfigPath = "~/dotfiles/modules/home/codebook.toml";
+          # グローバル辞書（words）は repo の modules/home/codebook.toml を直接読ませる。
+          # hx の space+a → "Add to global dictionary" で codebook がこのファイルに単語を
+          # 書き足すので、Nix ストアの読み取り専用 symlink にはできない。追加した単語は
+          # git で管理する（"Add to dictionary" の方はプロジェクトの .helix/codebook.toml）。
+          #
+          # 注意 1: 必ず絶対パスで渡す。codebook 0.3.39 は README では ~/ に対応とあるが、
+          # 起動時の読み込みでは ~ を展開せず（辞書なしで動く）、保存時だけ展開するため、
+          # 空の設定に足した 1 語でこのファイルを丸ごと上書きしてしまう。
+          # 注意 2: codebook は保存時に TOML を書き直すのでコメントは消える。説明はここに書き、
+          # codebook.toml は codebook 自身の書式（words だけ、4 スペース）にそろえてある。
+          config.globalConfigPath = "${config.home.homeDirectory}/dotfiles/modules/home/codebook.toml";
         };
 
         harper-ls = {
